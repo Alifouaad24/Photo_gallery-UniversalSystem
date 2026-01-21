@@ -31,20 +31,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Gallery')),
       floatingActionButton: FloatingActionButton(
-    child: const Icon(Icons.camera_alt),
-    onPressed: () async {
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const CameraSessionScreen(),
-        ),
-      );
+        child: const Icon(Icons.camera_alt),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CameraSessionScreen()),
+          );
 
-      if (result == true) {
-        _reload();
-      }
-    },
-  ),
+          if (result == true) {
+            _reload();
+          }
+        },
+      ),
       body: FutureBuilder(
         future: future,
         builder: (context, snapshot) {
