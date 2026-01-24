@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import '../models/photo_session.dart';
+import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
 
-class StorageService {
+class StoragePhotoService {
   static const String _sessionsFolder = 'sessions';
 
   static Future<Directory> _baseDir() async {

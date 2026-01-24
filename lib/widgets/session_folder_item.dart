@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../models/photo_session.dart';
-import '../screens/session_photos_screen.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
+import 'package:photo_gallery/modules/gallery/views/session_photos_screen.dart';
 
 class SessionFolderItem extends StatelessWidget {
   final PhotoSession session;
@@ -15,12 +18,7 @@ class SessionFolderItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SessionPhotosScreen(session: session),
-          ),
-        );
+        Get.toNamed(Routes.SessionPhotosScreen, arguments: session);
       },
       child: Container(
         width: 120,
@@ -32,7 +30,6 @@ class SessionFolderItem extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         child: Stack(
           children: [
-            // صورة الغلاف
             Positioned.fill(
               child: hasImages
                   ? Image.file(
@@ -47,8 +44,6 @@ class SessionFolderItem extends StatelessWidget {
                       ),
                     ),
             ),
-
-            // عدد الصور
             Positioned(
               bottom: 6,
               right: 6,

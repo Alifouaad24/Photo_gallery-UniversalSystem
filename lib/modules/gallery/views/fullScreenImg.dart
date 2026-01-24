@@ -50,7 +50,7 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
     );
   }
 
-
+  /// شريط الأدوات
   Widget _buildToolsBar() {
     return BottomAppBar(
       color: Colors.black,

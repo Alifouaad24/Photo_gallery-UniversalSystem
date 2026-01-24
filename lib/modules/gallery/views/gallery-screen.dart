@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:photo_gallery/screens/camera-session.dart';
-import '../models/photo_session.dart';
-import '../services/storage_service.dart';
-import '../widgets/session_folder_item.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/services/storage_service.dart';
+import 'package:photo_gallery/modules/camera/views/camera-session.dart';
+import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
+import 'package:photo_gallery/widgets/session_folder_item.dart';
+
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -17,12 +21,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   void initState() {
     super.initState();
-    future = StorageService.loadSessions();
+    future = StoragePhotoService.loadSessions();
   }
 
   void _reload() {
     setState(() {
-      future = StorageService.loadSessions();
+      future = StoragePhotoService.loadSessions();
     });
   }
 
@@ -33,10 +37,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.camera_alt),
         onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CameraSessionScreen()),
-          );
+          final result = await Get.toNamed(Routes.cameraSession);
 
           if (result == true) {
             _reload();

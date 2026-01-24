@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:photo_gallery/screens/home-screen.dart';
-import 'package:photo_gallery/services/permission_service.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
+import 'package:photo_gallery/app/services/storage_service.dart';
+import 'package:photo_gallery/data/api/api_methods.dart';
 
-void main() {
+import 'app/routes/app_pages.dart';
+import 'app/routes/app_routes.dart';
+import 'app/services/permission_service.dart';
+
+String? token;
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  PermissionService.requestCameraAndStorage();
+  await GetStorage.init();
+  StorageLocalService storageService = Get.put(StorageLocalService());
+  token = storageService.readString('token');
+  await PermissionService.requestCameraAndStorage();
+  Get.put(DioClient());
   runApp(const MyApp());
 }
 
@@ -13,10 +25,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Photo Gallery',
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      initialRoute: Routes.splash,
+      getPages: AppPages.pages,
       theme: ThemeData.dark(),
     );
   }
