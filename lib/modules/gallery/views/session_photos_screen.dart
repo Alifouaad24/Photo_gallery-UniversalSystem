@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
-import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
+import 'package:photo_gallery/models/photo_session.dart';
 import 'package:photo_gallery/modules/gallery/views/fullScreenImg.dart';
 
 class SessionPhotosScreen extends StatefulWidget {
@@ -15,14 +16,13 @@ class SessionPhotosScreen extends StatefulWidget {
 }
 
 class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
-  late final PhotoSession session;
-
+  final controller = Get.find<GalleryController>();
   @override
   void initState() {
     super.initState();
     final args = Get.arguments;
     if (args is PhotoSession) {
-      session = args;
+      controller.session = args;
     } else {
       Future.microtask(() => Get.back());
     }
@@ -30,24 +30,56 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final session = this.session;
     return GetBuilder<GalleryController>(
       builder: (controller) => Scaffold(
         appBar: AppBar(
           title: Text(
-            '${session.createdAt.year}-${session.createdAt.month}-${session.createdAt.day}',
+            '${controller.session.createdAt.year}-${controller.session.createdAt.month}-${controller.session.createdAt.day}',
           ),
+
           actions: [
             if (controller.selectedIndexes.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.cloud_upload),
-                onPressed: () {
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
                   final filesToUpload = controller.selectedIndexes
-                      .map((i) => session.images[i])
+                      .map((i) => controller.session.images[i])
                       .toList();
-                   controller.uploadImages(filesToUpload);
-                  //
+
+                  switch (value) {
+                    case 'upload':
+                      controller.uploadImages(filesToUpload);
+                      break;
+                    case 'delete':
+                      controller.deleteSelectedImages();
+                      break;
+                    case 'share':
+                      //controller.shareImages(filesToUpload);
+                      break;
+                  }
                 },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'upload',
+                    child: Row(
+                      children: [
+                        Icon(Icons.cloud_upload, size: 20),
+                        SizedBox(width: 8),
+                        Text('Upload Images'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 20, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Delete Images'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -55,69 +87,75 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
           children: [
             GridView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount: session.images.length,
+              itemCount: controller.session.images.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-            ),
-            itemBuilder: (_, index) {
-              final file = session.images[index];
-              final isSelected = controller.selectedIndexes.contains(index);
-          
-              return GestureDetector(
-                onLongPress: () {
-                  controller.toggleSelection(index);
-                },
-                onTap: () async {
-                  if (controller.selectedIndexes.isNotEmpty) {
+                mainAxisSpacing: 6,
+              ),
+              itemBuilder: (_, index) {
+                final file = controller.session.images[index];
+                final isSelected = controller.selectedIndexes.contains(index);
+
+                return GestureDetector(
+                  onLongPress: () {
                     controller.toggleSelection(index);
-                    return;
-                  }
-          
-                  final editedImage = await Get.to<File>(
-                    () => FullScreenImageEditor(imageFile: file),
-                  );
-          
-                  if (editedImage != null) {
-                    session.images[index] = editedImage;
-                    controller.update();
-                  }
-                },
-                child: Stack(
-                  children: [
-                    Positioned.fill(child: Image.file(file, fit: BoxFit.cover)),
-          
-                    if (isSelected)
+                  },
+                  onTap: () async {
+                    if (controller.selectedIndexes.isNotEmpty) {
+                      controller.toggleSelection(index);
+                      return;
+                    }
+
+                    final editedImage = await Get.to<File>(
+                      () => FullScreenImageEditor(imageFile: file),
+                    );
+
+                    if (editedImage != null) {
+                      controller.session.images[index] = editedImage;
+                      controller.update();
+                    }
+                  },
+                  child: Stack(
+                    children: [
                       Positioned.fill(
-                        child: Container(color: Colors.green.withOpacity(0.35)),
-                      ),
-          
-                    if (isSelected)
-                      const Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Icon(
-                          Icons.check_circle,
-                          color: Colors.greenAccent,
-                          size: 26,
+                        child: Image.file(
+                          file,
+                          fit: BoxFit.cover,
+                          key: ValueKey(file.path),
                         ),
                       ),
-                  ],
-                ),
-              );
-            },
-          ),
+
+                      if (isSelected)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.green.withOpacity(0.35),
+                          ),
+                        ),
+
+                      if (isSelected)
+                        const Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Icon(
+                            Icons.check_circle,
+                            color: Colors.greenAccent,
+                            size: 26,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
             if (controller.isLoading)
               Positioned.fill(
                 child: Container(
                   color: Colors.black45,
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
               ),
-          ]
+          ],
         ),
       ),
     );

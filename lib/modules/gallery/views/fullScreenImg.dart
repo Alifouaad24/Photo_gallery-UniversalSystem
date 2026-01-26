@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
+import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 
 class FullScreenImageEditor extends StatefulWidget {
   final File imageFile;
@@ -35,7 +37,6 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () {
-              // إرجاع الصورة المعدلة للشاشة السابقة
               Navigator.pop(context, _currentImage);
             },
           )
@@ -43,7 +44,10 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
       ),
       body: Center(
         child: InteractiveViewer(
-          child: Image.file(_currentImage),
+          child: Image.file(
+  _currentImage,
+  key: ValueKey(_currentImage.path),
+)
         ),
       ),
       bottomNavigationBar: _buildToolsBar(),
@@ -52,50 +56,53 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
 
   /// شريط الأدوات
   Widget _buildToolsBar() {
-    return BottomAppBar(
-      color: Colors.black,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.crop, color: Colors.white),
-            onPressed: _cropImage,
-          ),
-          IconButton(
-            icon: const Icon(Icons.rotate_right, color: Colors.white),
-            onPressed: _rotateImage,
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter, color: Colors.white),
-            onPressed: _applyGrayFilter,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// قص الصورة
-  Future<void> _cropImage() async {
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: _currentImage.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop',
-          toolbarColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
+  return BottomAppBar(
+    color: Colors.black,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.crop, color: Colors.white),
+          onPressed: _cropImage,
         ),
-        IOSUiSettings(
-          title: 'Crop',
+        IconButton(
+          icon: const Icon(Icons.rotate_right, color: Colors.white),
+          onPressed: _rotateImage,
+        ),
+        IconButton(
+          icon: const Icon(Icons.filter, color: Colors.white),
+          onPressed: _applyGrayFilter,
         ),
       ],
-    );
+    ),
+  );
+}
 
-    if (cropped == null) return;
 
-    setState(() {
-      _currentImage = File(cropped.path);
-    });
-  }
+Future<void> _cropImage() async {
+  final cropped = await ImageCropper().cropImage(
+    sourcePath: _currentImage.path,
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Crop',
+        toolbarColor: Colors.black,
+        toolbarWidgetColor: Colors.white,
+      ),
+    ],
+  );
+
+  if (cropped == null) return;
+
+  final newFile = File(
+    '${_currentImage.parent.path}/crop_${DateTime.now().millisecondsSinceEpoch}.jpg',
+  );
+
+  await newFile.writeAsBytes(await File(cropped.path).readAsBytes());
+
+  setState(() {
+    _currentImage = newFile;
+  });
+}
 
   /// تدوير الصورة 90 درجة
   Future<void> _rotateImage() async {
@@ -117,23 +124,23 @@ await newFile.writeAsBytes(img.encodeJpg(rotated));
     });
   }
 
-  /// فلتر أبيض وأسود
-  Future<void> _applyGrayFilter() async {
-    final bytes = await _currentImage.readAsBytes();
-    final original = img.decodeImage(bytes);
+Future<void> _applyGrayFilter() async {
+  final bytes = await _currentImage.readAsBytes();
+  final original = img.decodeImage(bytes);
+  if (original == null) return;
 
-    if (original == null) return;
+  final filtered = img.grayscale(original);
 
-    final filtered = img.grayscale(original);
+  final newPath =
+      '${_currentImage.parent.path}/gray_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    final newFile = await _currentImage.writeAsBytes(
-      img.encodeJpg(filtered),
-    );
+  final newFile = File(newPath);
+  await newFile.writeAsBytes(img.encodeJpg(filtered));
 
-    setState(() {
-      _currentImage = newFile;
-    });
-  }
+  setState(() {
+    _currentImage = newFile;
+  });
+}
 }
 
 

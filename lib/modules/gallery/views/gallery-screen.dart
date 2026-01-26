@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
-import 'package:photo_gallery/app/services/storage_service.dart';
-import 'package:photo_gallery/modules/camera/views/camera-session.dart';
-import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
 import 'package:photo_gallery/widgets/session_folder_item.dart';
-
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -16,18 +12,12 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  late Future<Map<DateTime, List<PhotoSession>>> future;
+  final controller = Get.put(GalleryController());
 
   @override
   void initState() {
     super.initState();
-    future = StoragePhotoService.loadSessions();
-  }
-
-  void _reload() {
-    setState(() {
-      future = StoragePhotoService.loadSessions();
-    });
+    controller.loadSessions();
   }
 
   @override
@@ -38,20 +28,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
         child: const Icon(Icons.camera_alt),
         onPressed: () async {
           final result = await Get.toNamed(Routes.cameraSession);
-
           if (result == true) {
-            _reload();
+            controller.loadSessions();
           }
         },
       ),
-      body: FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final grouped = snapshot.data!;
+      body: GetBuilder<GalleryController>(
+        builder: (_) {
+          final grouped = controller.groupedSessions;
           if (grouped.isEmpty) {
             return const Center(child: Text('No recent sessions'));
           }
@@ -82,8 +66,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: sessions.length,
-                      itemBuilder: (_, j) =>
-                          SessionFolderItem(session: sessions[j]),
+                      itemBuilder: (_, j) => SessionFolderList(),
                     ),
                   ),
                 ],

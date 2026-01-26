@@ -1,71 +1,91 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/get_navigation.dart';
+import 'package:get/get.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
-import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
+import 'package:photo_gallery/models/photo_session.dart';
+import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 import 'package:photo_gallery/modules/gallery/views/session_photos_screen.dart';
 
-class SessionFolderItem extends StatelessWidget {
-  final PhotoSession session;
-
-  const SessionFolderItem({super.key, required this.session});
+class SessionFolderList extends StatelessWidget {
+  const SessionFolderList({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final hasImages = session.images.isNotEmpty;
-    final coverImage = hasImages ? session.images.first : null;
+    return GetBuilder<GalleryController>(
+      builder: (controller) {
+        final sessions = controller.groupedSessions.values.expand((e) => e).toList();
+        return sessions.isEmpty
+            ? const Center(child: Text('No sessions found'))
+            : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: sessions.map((session) {
+                    final hasImages = session.images.isNotEmpty;
+                    final coverImage = hasImages ? session.images.first : null;
 
-    return GestureDetector(
-      onTap: () {
-        Get.toNamed(Routes.SessionPhotosScreen, arguments: session);
-      },
-      child: Container(
-        width: 120,
-        margin: const EdgeInsets.symmetric(horizontal: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.grey.shade900,
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: hasImages
-                  ? Image.file(
-                      coverImage!,
-                      fit: BoxFit.cover,
-                    )
-                  : const Center(
-                      child: Icon(
-                        Icons.folder,
-                        size: 50,
-                        color: Colors.white54,
+                    return GestureDetector(
+                      onTap: () {
+                        Get.to(() => const SessionPhotosScreen(),
+                            arguments: session);
+                      },
+                      child: Container(
+                        width: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade900,
+                        ),
+                        clipBehavior: Clip.hardEdge,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: hasImages
+                                  ? Image.file(
+                                      coverImage!,
+                                      fit: BoxFit.cover,
+                                      key: ValueKey(
+                                        coverImage.path +
+                                            coverImage
+                                                .lastModifiedSync()
+                                                .toString(),
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.folder,
+                                        size: 50,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                            ),
+                            Positioned(
+                              bottom: 6,
+                              right: 6,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${session.images.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-            ),
-            Positioned(
-              bottom: 6,
-              right: 6,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
+                    );
+                  }).toList(),
                 ),
-                child: Text(
-                  '${session.images.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+              );
+      },
     );
   }
 }

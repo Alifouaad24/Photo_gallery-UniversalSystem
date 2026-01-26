@@ -43,7 +43,7 @@ class AuthController extends GetxController {
           'Welcome!',
           snackPosition: SnackPosition.BOTTOM,
         );
-        Get.toNamed(Routes.home);
+        Get.offAllNamed(Routes.home);
       },
     );
   }

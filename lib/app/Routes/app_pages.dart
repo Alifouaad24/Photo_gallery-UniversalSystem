@@ -14,7 +14,6 @@ import 'package:photo_gallery/modules/camera/views/camera-session.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 import 'package:photo_gallery/modules/gallery/views/fullScreenImg.dart';
 import 'package:photo_gallery/modules/gallery/views/gallery-screen.dart';
-import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
 import 'package:photo_gallery/modules/gallery/views/session_photos_screen.dart';
 import 'package:photo_gallery/modules/home/views/home-screen.dart';
 import 'package:photo_gallery/modules/splash/views/splash_screen.dart';

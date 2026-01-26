@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:photo_gallery/modules/gallery/views/photo_session.dart';
+import 'package:photo_gallery/models/photo_session.dart';
 
 class StoragePhotoService {
   static const String _sessionsFolder = 'sessions';
@@ -47,7 +47,6 @@ class StoragePhotoService {
     return savedImage;
   }
 
-  /// تحميل كل الجلسات
   static Future<Map<DateTime, List<PhotoSession>>> loadSessions() async {
     final base = await _baseDir();
     final sessionDirs =
