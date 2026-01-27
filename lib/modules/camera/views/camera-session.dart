@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CameraSessionScreen extends StatefulWidget {
@@ -47,18 +48,39 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
     await sessionDir.create(recursive: true);
   }
 
-  Future<void> capture() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        capturedImages.length >= 10) return;
+Future<void> capture() async {
+  if (_controller == null ||
+      !_controller!.value.isInitialized ||
+      capturedImages.length >= 10) return;
 
-    final xFile = await _controller!.takePicture();
-    final newPath =
-        '${sessionDir.path}/img_${capturedImages.length}.jpg';
+  // 🔊 صوت الكاميرا
+  SystemSound.play(SystemSoundType.click);
 
-    final saved = await File(xFile.path).copy(newPath);
+  // 📳 اهتزاز خفيف
+  HapticFeedback.lightImpact();
 
-    setState(() => capturedImages.add(saved));
+  final xFile = await _controller!.takePicture();
+  final newPath =
+      '${sessionDir.path}/img_${capturedImages.length}.jpg';
+
+  final saved = await File(xFile.path).copy(newPath);
+
+  setState(() => capturedImages.add(saved));
+
+  _showFlash();
+}
+  void _showFlash() {
+    final overlay = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (context) => Positioned.fill(
+        child: Container(color: Colors.white.withOpacity(0.7)),
+      ),
+    );
+
+    overlay?.insert(entry);
+    Future.delayed(const Duration(milliseconds: 100), () {
+      entry.remove();
+    });
   }
 
   @override
