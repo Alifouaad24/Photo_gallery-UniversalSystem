@@ -4,11 +4,12 @@ import 'package:get/get.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
 import 'package:photo_gallery/main.dart';
 import 'package:photo_gallery/models/splashResponseModel.dart';
+import 'package:photo_gallery/modules/auth/LoginResponse.dart';
 
 class AuthRepository {
   final Dio _dio = DioClient().dio;
 
-  Future<Either<String, String>> login({
+  Future<Either<String, LoginResponse>> login({
     required String email,
     required String password,
   }) async {
@@ -19,7 +20,8 @@ class AuthRepository {
       );
 
       final data = response.data;
-      return Right(data['token']);
+      final loginResponse = LoginResponse.fromJson(data);
+      return Right(loginResponse);
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         final errorData = e.response?.data;

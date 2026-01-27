@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:photo_gallery/models/splashResponseModel.dart';
 import 'package:photo_gallery/modules/auth/controllers/AuthController.dart';
@@ -49,7 +51,12 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         actions: [
-          
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Get.find<AuthController>().logout();
+            },
+          ),
         ],
         automaticallyImplyLeading: false,
       ),
