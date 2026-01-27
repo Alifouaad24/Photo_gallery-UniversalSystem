@@ -87,13 +87,11 @@ class StoragePhotoService {
       grouped[dayKey]!.add(session);
     }
 
-    // ترتيب الجلسات داخل كل يوم
     for (final day in grouped.keys) {
       grouped[day]!.sort(
         (a, b) => b.createdAt.compareTo(a.createdAt),
       );
     }
-
     return grouped;
   }
 }

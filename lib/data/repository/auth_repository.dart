@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
 import 'package:photo_gallery/main.dart';
+import 'package:photo_gallery/models/splashResponseModel.dart';
 
 class AuthRepository {
   final Dio _dio = DioClient().dio;
@@ -32,7 +33,7 @@ class AuthRepository {
     }
   }
 
-  Future<Either<String, Map<String, dynamic>>> GetMyData() async {
+  Future<Either<String, UserResponse>> GetMyData() async {
     try {
       final response = await _dio.get(
         '/Account/GetMyData',
@@ -40,7 +41,8 @@ class AuthRepository {
       );
 
       final data = response.data;
-      return Right(data);
+      final userResponse = UserResponse.fromJson(data);
+      return Right(userResponse);
     } on DioException catch (e) {
       final data = e.response?.data;
 

@@ -73,6 +73,13 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
           icon: const Icon(Icons.filter, color: Colors.white),
           onPressed: _applyGrayFilter,
         ),
+        GetBuilder<GalleryController>(builder: 
+(controller) =>
+        IconButton(
+          icon: const Icon(Icons.qr_code, color: Colors.white),
+          onPressed: () => controller.scanBarcodeFromImage(_currentImage),
+        ),
+        )
       ],
     ),
   );

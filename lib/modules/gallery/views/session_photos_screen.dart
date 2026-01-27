@@ -29,6 +29,13 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    controller.clearSelection();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetBuilder<GalleryController>(
       builder: (controller) => Scaffold(

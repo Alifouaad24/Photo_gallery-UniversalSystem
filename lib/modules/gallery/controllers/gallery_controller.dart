@@ -2,10 +2,12 @@ import 'dart:io';
 import 'dart:ui';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/app/services/storage_service.dart';
 import 'package:photo_gallery/data/repository/gallery_repository.dart';
 import 'package:photo_gallery/models/photo_session.dart';
@@ -15,7 +17,7 @@ class GalleryController extends GetxController {
   late PhotoSession session;
   final Set<int> selectedIndexes = {};
   bool isLoading = false;
-
+StorageLocalService storageService = Get.find<StorageLocalService>();
    Map<DateTime, List<PhotoSession>> groupedSessions = {};
 
   Future<void> loadSessions() async {
@@ -36,10 +38,21 @@ class GalleryController extends GetxController {
     update();
   }
 
+
   Future<void> uploadImages(List<File> files) async {
+    int businessId = storageService.readInt('business_id') ?? 0;
+    if (businessId == 0) {
+      Get.snackbar(
+        'Error',
+        'Business ID not found',
+        backgroundColor: const Color(0xFFFF4C4C),
+        colorText: Colors.white,
+      );
+      return;
+    }
     isLoading = true;
     update();
-    final result = await galleryRepo.uploadImages(files);
+    final result = await galleryRepo.uploadImages(files, businessId);
     result.fold(
       (error) {
         isLoading = false;
@@ -50,6 +63,7 @@ class GalleryController extends GetxController {
           backgroundColor: const Color(0xFFFF4C4C),
           colorText: Colors.white,
         );
+        
       },
       (message) {
         isLoading = false;
@@ -67,38 +81,42 @@ class GalleryController extends GetxController {
     update();
   }
 
-  Future<String?> scanBarcodeFromImage(File barcodeImage) async {
-    final inputImage = InputImage.fromFile(barcodeImage);
-    final scanner = BarcodeScanner();
+Future<void> scanBarcodeFromImage(File barcodeImage) async {
+  final inputImage = InputImage.fromFile(barcodeImage);
+  final scanner = BarcodeScanner();
 
-    try {
-      final barcodes = await scanner.processImage(inputImage);
+  try {
+    final barcodes = await scanner.processImage(inputImage);
 
-      if (barcodes.isNotEmpty) {
-        Get.snackbar(
-          'Barcode Found',
-          barcodes.first.rawValue ?? '',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-        saveTextAsImage(
-          text: barcodes.first.rawValue ?? '',
-          folderPath: barcodeImage.parent.path,
-        );
-        return barcodes.first.rawValue;
-      } else {
-        Get.snackbar(
-          'No Barcode Found',
-          'No barcode could be detected in this image.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return null;
-      }
-    } finally {
-      await scanner.close();
+    if (barcodes.isNotEmpty) {
+      final value = barcodes.first.rawValue ?? '';
+
+      Get.snackbar(
+        'Barcode Found',
+        value,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // حفظ صورة الرقم
+      await saveTextAsImage(
+        text: value,
+        folderPath: barcodeImage.parent.path,
+      );
+      groupedSessions = await StoragePhotoService.loadSessions();
+      update();
+    } else {
+      Get.snackbar(
+        'No Barcode Found',
+        'No barcode could be detected in this image.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
+  } finally {
+    await scanner.close();
   }
+}
 
   Future<File> saveTextAsImage({
     required String text,

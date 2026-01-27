@@ -8,7 +8,7 @@ import 'package:photo_gallery/main.dart';
 class GalleryRepository {
   Dio _dio = DioClient().dio;
 
-  Future<Either<String, String>> uploadImages(List<File> files) async {
+  Future<Either<String, String>> uploadImages(List<File> files, int businessId) async {
     try {
       final formData = FormData();
 
@@ -23,6 +23,8 @@ class GalleryRepository {
           ),
         );
       }
+
+      formData.fields.add(MapEntry('BusinessId', businessId.toString()));
 
       final response = await _dio.post(
         '/ImageUploader',
