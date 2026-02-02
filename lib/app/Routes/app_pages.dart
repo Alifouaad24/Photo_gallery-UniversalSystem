@@ -4,11 +4,13 @@ import 'package:get/get_instance/src/bindings_interface.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/bindings/add_item_binding.dart';
 import 'package:photo_gallery/app/bindings/auth_binding.dart';
 import 'package:photo_gallery/app/bindings/camera_binding.dart';
 import 'package:photo_gallery/app/bindings/gallery_binding.dart';
 import 'package:photo_gallery/app/bindings/home_binding.dart';
 import 'package:photo_gallery/app/bindings/splash_binding.dart';
+import 'package:photo_gallery/modules/add-items/views/add-itemsScreen.dart';
 import 'package:photo_gallery/modules/auth/views/login_screen.dart';
 import 'package:photo_gallery/modules/camera/views/camera-session.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
@@ -56,6 +58,11 @@ class AppPages {
     GetPage(
       name: Routes.FullScreenImage,
       page: () => FullScreenImageEditor(imageFile: null!),
+    ),
+     GetPage(
+      name: Routes.addItemScreen,
+      page: () => AddItemScreen(),
+      binding: AddItemBinding(),
     ),
   ];
 }

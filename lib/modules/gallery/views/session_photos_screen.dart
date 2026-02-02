@@ -59,6 +59,45 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                       break;
                     case 'delete':
                       controller.deleteSelectedImages();
+
+                      final context = Get.overlayContext;
+                      if (context == null) return;
+
+                      final overlay = Overlay.of(context);
+                      if (overlay == null) return;
+
+                      final entry = OverlayEntry(
+                        builder: (_) => Positioned(
+                          bottom: 100,
+                          left: 20,
+                          right: 20,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(221, 86, 85, 85),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'Images deleted successfully',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 255, 255, 255),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+
+                      overlay.insert(entry);
+
+                      Future.delayed(const Duration(seconds: 3), () {
+                        entry.remove();
+                      });
+
                       break;
                     case 'share':
                       //controller.shareImages(filesToUpload);
