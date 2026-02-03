@@ -14,24 +14,34 @@ class BarcodeOverlay extends StatelessWidget {
 class _BarcodeOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black.withOpacity(0.5);
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      paint,
+    final overlayPaint = Paint()
+      ..color = Colors.black.withOpacity(0.6);
+
+    final fullScreen = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final cutOut = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(size.width / 2, size.height / 2),
+            width: 250,
+            height: 100,
+          ),
+          const Radius.circular(12),
+        ),
+      );
+
+    final overlayPath = Path.combine(
+      PathOperation.difference,
+      fullScreen,
+      cutOut,
     );
-    final cutOutRect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: 250,
-      height: 100,
-    );
-    paint.blendMode = BlendMode.clear;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(cutOutRect, const Radius.circular(12)),
-      paint,
-    );
+
+    canvas.drawPath(overlayPath, overlayPaint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

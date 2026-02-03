@@ -25,6 +25,52 @@ class SessionFolderList extends StatelessWidget {
                     final coverImage = hasImages ? session.images.first : null;
 
                     return GestureDetector(
+                      onLongPress: () {
+                        showDialog(context: context, builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Delete Session'),
+                            content: const Text('Are you sure you want to delete this session? This action cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  controller.deleteSession(session);
+                                  final entry = OverlayEntry(
+                        builder: (_) => Positioned(
+                          bottom: 100,
+                          left: 20,
+                          right: 20,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(221, 86, 85, 85),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'Folder deleted successfully',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 255, 255, 255),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                                },
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          );
+                        });
+                      },
                       onTap: () {
                         Get.to(() => const SessionPhotosScreen(),
                             arguments: session);

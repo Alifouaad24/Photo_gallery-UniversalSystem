@@ -17,13 +17,14 @@ class GalleryController extends GetxController {
   late PhotoSession session;
   final Set<int> selectedIndexes = {};
   bool isLoading = false;
-StorageLocalService storageService = Get.find<StorageLocalService>();
-   Map<DateTime, List<PhotoSession>> groupedSessions = {};
+  StorageLocalService storageService = Get.find<StorageLocalService>();
+  Map<DateTime, List<PhotoSession>> groupedSessions = {};
 
   Future<void> loadSessions() async {
     groupedSessions = await StoragePhotoService.loadSessions();
     update();
   }
+
   void toggleSelection(int index) {
     if (selectedIndexes.contains(index)) {
       selectedIndexes.remove(index);
@@ -37,7 +38,6 @@ StorageLocalService storageService = Get.find<StorageLocalService>();
     selectedIndexes.clear();
     update();
   }
-
 
   Future<void> uploadImages(List<File> files) async {
     int businessId = storageService.readInt('business_id') ?? 0;
@@ -63,7 +63,6 @@ StorageLocalService storageService = Get.find<StorageLocalService>();
           backgroundColor: const Color(0xFFFF4C4C),
           colorText: Colors.white,
         );
-        
       },
       (message) {
         isLoading = false;
@@ -81,42 +80,42 @@ StorageLocalService storageService = Get.find<StorageLocalService>();
     update();
   }
 
-Future<void> scanBarcodeFromImage(File barcodeImage) async {
-  final inputImage = InputImage.fromFile(barcodeImage);
-  final scanner = BarcodeScanner();
+  Future<void> scanBarcodeFromImage(File barcodeImage) async {
+    final inputImage = InputImage.fromFile(barcodeImage);
+    final scanner = BarcodeScanner();
 
-  try {
-    final barcodes = await scanner.processImage(inputImage);
+    try {
+      final barcodes = await scanner.processImage(inputImage);
 
-    if (barcodes.isNotEmpty) {
-      final value = barcodes.first.rawValue ?? '';
+      if (barcodes.isNotEmpty) {
+        final value = barcodes.first.rawValue ?? '';
 
-      Get.snackbar(
-        'Barcode Found',
-        value,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+        Get.snackbar(
+          'Barcode Found',
+          value,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
 
-      // حفظ صورة الرقم
-      await saveTextAsImage(
-        text: value,
-        folderPath: barcodeImage.parent.path,
-      );
-      groupedSessions = await StoragePhotoService.loadSessions();
-      update();
-    } else {
-      Get.snackbar(
-        'No Barcode Found',
-        'No barcode could be detected in this image.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+        // حفظ صورة الرقم
+        await saveTextAsImage(
+          text: value,
+          folderPath: barcodeImage.parent.path,
+        );
+        groupedSessions = await StoragePhotoService.loadSessions();
+        update();
+      } else {
+        Get.snackbar(
+          'No Barcode Found',
+          'No barcode could be detected in this image.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } finally {
+      await scanner.close();
     }
-  } finally {
-    await scanner.close();
   }
-}
 
   Future<File> saveTextAsImage({
     required String text,
@@ -165,26 +164,40 @@ Future<void> scanBarcodeFromImage(File barcodeImage) async {
   }
 
   Future<void> deleteSelectedImages() async {
-  isLoading = true;
-  update();
+    isLoading = true;
+    update();
 
-  final indexes = selectedIndexes.toList()..sort((a, b) => b.compareTo(a));
+    final indexes = selectedIndexes.toList()..sort((a, b) => b.compareTo(a));
 
-  for (final index in indexes) {
-    final file = session.images[index];
+    for (final index in indexes) {
+      final file = session.images[index];
 
-    if (await file.exists()) {
-      await file.delete();
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      session.images.removeAt(index);
     }
 
-    session.images.removeAt(index);
+    selectedIndexes.clear();
+
+    groupedSessions = await StoragePhotoService.loadSessions();
+    isLoading = false;
+    update();
   }
 
-  selectedIndexes.clear();
-  
-  groupedSessions = await StoragePhotoService.loadSessions();
-  isLoading = false;
-  update();
-}
+  void deleteSession(PhotoSession session) async {
+    isLoading = true;
+    update();
 
+    for (final file in session.images) {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+
+    groupedSessions = await StoragePhotoService.loadSessions();
+    isLoading = false;
+    update();
+  }
 }
