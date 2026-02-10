@@ -70,7 +70,7 @@ class AddItemScreen extends StatelessWidget {
                   ),
                 const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
+                  padding: const EdgeInsets.only(bottom: 16.0),
                   child: ElevatedButton(
                     onPressed:
                         (controller.images.isEmpty && controller.barcodes == null)

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 
@@ -98,6 +99,21 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          Positioned.fill(
+            child: MobileScanner(
+              controller: MobileScannerController(
+                detectionSpeed: DetectionSpeed.noDuplicates,
+              ),
+              onDetect: (capture) {
+                final barcode = capture.barcodes.first;
+                final value = barcode.rawValue ?? '';
+                final controller = Get.find<GalleryController>();
+                controller.handleScannedBarcode(value, sessionDir: sessionDir);
+                setState(() => capturedImages.add(File('')));
+                _showFlash();
+              },
+            ),
+          ),
           Positioned.fill(child: CameraPreview(_controller!)),
           Positioned(
             top: 40,

@@ -12,14 +12,11 @@ class FullScreenImageEditor extends StatefulWidget {
   const FullScreenImageEditor({super.key, required this.imageFile});
 
   @override
-  State<FullScreenImageEditor> createState() =>
-      _FullScreenImageEditorState();
+  State<FullScreenImageEditor> createState() => _FullScreenImageEditorState();
 }
 
 class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
   late File _currentImage;
-
-  
 
   @override
   void initState() {
@@ -39,15 +36,12 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
             onPressed: () {
               Navigator.pop(context, _currentImage);
             },
-          )
+          ),
         ],
       ),
       body: Center(
         child: InteractiveViewer(
-          child: Image.file(
-  _currentImage,
-  key: ValueKey(_currentImage.path),
-)
+          child: Image.file(_currentImage, key: ValueKey(_currentImage.path)),
         ),
       ),
       bottomNavigationBar: _buildToolsBar(),
@@ -56,60 +50,56 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
 
   /// شريط الأدوات
   Widget _buildToolsBar() {
-  return BottomAppBar(
-    color: Colors.black,
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.crop, color: Colors.white),
-          onPressed: _cropImage,
-        ),
-        IconButton(
-          icon: const Icon(Icons.rotate_right, color: Colors.white),
-          onPressed: _rotateImage,
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter, color: Colors.white),
-          onPressed: _applyGrayFilter,
-        ),
-        GetBuilder<GalleryController>(builder: 
-(controller) =>
-        IconButton(
-          icon: const Icon(Icons.qr_code, color: Colors.white),
-          onPressed: () => controller.scanBarcodeFromImage(_currentImage),
-        ),
-        )
-      ],
-    ),
-  );
-}
-
-
-Future<void> _cropImage() async {
-  final cropped = await ImageCropper().cropImage(
-    sourcePath: _currentImage.path,
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Crop',
-        toolbarColor: Colors.black,
-        toolbarWidgetColor: Colors.white,
+    return BottomAppBar(
+      color: Colors.black,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.crop, color: Colors.white),
+            onPressed: _cropImage,
+          ),
+          IconButton(
+            icon: const Icon(Icons.rotate_right, color: Colors.white),
+            onPressed: _rotateImage,
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter, color: Colors.white),
+            onPressed: _applyGrayFilter,
+          ),
+          // GetBuilder<GalleryController>(
+          //   builder: (controller) => IconButton(
+          //     icon: const Icon(Icons.qr_code, color: Colors.white),
+          //     onPressed: () => controller.scanBarcodeFromImage(_currentImage),
+          //   ),
+          // ),
+        ],
       ),
-    ],
-  );
+    );
+  }
 
-  if (cropped == null) return;
+  Future<void> _cropImage() async {
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: _currentImage.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Crop',
+        ),
+      ],
+    );
 
-  final newFile = File(
-    '${_currentImage.parent.path}/crop_${DateTime.now().millisecondsSinceEpoch}.jpg',
-  );
+    if (cropped == null) return;
 
-  await newFile.writeAsBytes(await File(cropped.path).readAsBytes());
+    final newFile = File(
+      '${_currentImage.parent.path}/crop_${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
 
-  setState(() {
-    _currentImage = newFile;
-  });
-}
+    await newFile.writeAsBytes(await File(cropped.path).readAsBytes());
+
+    setState(() {
+      _currentImage = newFile;
+    });
+  }
 
   /// تدوير الصورة 90 درجة
   Future<void> _rotateImage() async {
@@ -120,34 +110,32 @@ Future<void> _cropImage() async {
 
     final rotated = img.copyRotate(original, angle: 90);
 
-final newPath =
-    '${_currentImage.parent.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final newPath =
+        '${_currentImage.parent.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-final newFile = File(newPath);
-await newFile.writeAsBytes(img.encodeJpg(rotated));
+    final newFile = File(newPath);
+    await newFile.writeAsBytes(img.encodeJpg(rotated));
 
     setState(() {
       _currentImage = newFile;
     });
   }
 
-Future<void> _applyGrayFilter() async {
-  final bytes = await _currentImage.readAsBytes();
-  final original = img.decodeImage(bytes);
-  if (original == null) return;
+  Future<void> _applyGrayFilter() async {
+    final bytes = await _currentImage.readAsBytes();
+    final original = img.decodeImage(bytes);
+    if (original == null) return;
 
-  final filtered = img.grayscale(original);
+    final filtered = img.grayscale(original);
 
-  final newPath =
-      '${_currentImage.parent.path}/gray_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final newPath =
+        '${_currentImage.parent.path}/gray_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-  final newFile = File(newPath);
-  await newFile.writeAsBytes(img.encodeJpg(filtered));
+    final newFile = File(newPath);
+    await newFile.writeAsBytes(img.encodeJpg(filtered));
 
-  setState(() {
-    _currentImage = newFile;
-  });
+    setState(() {
+      _currentImage = newFile;
+    });
+  }
 }
-}
-
-

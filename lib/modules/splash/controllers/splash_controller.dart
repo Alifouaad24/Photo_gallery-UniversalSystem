@@ -18,6 +18,9 @@ class SplashController extends GetxController {
     super.onInit();
     initializeSettings();
     selectedBusinessId = storageService.readInt('business_id');
+    if (selectedBusinessId == null && userResponse != null && userResponse!.businesses.isNotEmpty) {
+      storageService.writeInt('business_id', userResponse!.businesses.first.businessId);
+    }
   }
 
    void selectBusiness(Business business) {
@@ -31,7 +34,10 @@ class SplashController extends GetxController {
 
     return userResponse!.businesses.firstWhere(
       (b) => b.businessId == selectedBusinessId,
-      orElse: () => userResponse!.businesses.first,
+      orElse: (){
+        storageService.writeInt('business_id', userResponse!.businesses.first.businessId);
+        return userResponse!.businesses.first;
+      } 
     );
   }
 

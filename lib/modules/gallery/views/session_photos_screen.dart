@@ -158,6 +158,9 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                     );
 
                     if (editedImage != null) {
+                      // 🔥 هذا السطر المهم
+                      await FileImage(file).evict();
+
                       controller.session.images[index] = editedImage;
                       controller.update();
                     }
@@ -168,7 +171,7 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                         child: Image.file(
                           file,
                           fit: BoxFit.cover,
-                          key: ValueKey(file.path),
+                          gaplessPlayback: true,
                         ),
                       ),
 

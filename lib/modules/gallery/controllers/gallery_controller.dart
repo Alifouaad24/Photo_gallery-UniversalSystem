@@ -1,12 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/get_navigation.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/app/services/storage_service.dart';
 import 'package:photo_gallery/data/repository/gallery_repository.dart';
@@ -80,42 +75,55 @@ class GalleryController extends GetxController {
     update();
   }
 
-  Future<void> scanBarcodeFromImage(File barcodeImage) async {
-    final inputImage = InputImage.fromFile(barcodeImage);
-    final scanner = BarcodeScanner();
+  Future<void> handleScannedBarcode(
+    String value, {
+    required Directory sessionDir,
+  }) async {
+    if (value.isEmpty) return;
 
-    try {
-      final barcodes = await scanner.processImage(inputImage);
+    await saveTextAsImage(text: value, folderPath: sessionDir.path);
 
-      if (barcodes.isNotEmpty) {
-        final value = barcodes.first.rawValue ?? '';
-
-        Get.snackbar(
-          'Barcode Found',
-          value,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-
-        // حفظ صورة الرقم
-        await saveTextAsImage(
-          text: value,
-          folderPath: barcodeImage.parent.path,
-        );
-        groupedSessions = await StoragePhotoService.loadSessions();
-        update();
-      } else {
-        Get.snackbar(
-          'No Barcode Found',
-          'No barcode could be detected in this image.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } finally {
-      await scanner.close();
-    }
+    groupedSessions = await StoragePhotoService.loadSessions();
+    update();
   }
+
+  // Future<void> scanBarcodeFromImage(File barcodeImage) async {
+  //   final inputImage = InputImage.fromFile(barcodeImage);
+  //   final scanner = BarcodeScanner();
+
+  //   try {
+  //     final barcodes = await scanner.processImage(inputImage);
+
+  //     if (barcodes.isNotEmpty) {
+  //       final value = barcodes.first.rawValue ?? '';
+
+  //       Get.snackbar(
+  //         'Barcode Found',
+  //         value,
+  //         backgroundColor: Colors.green,
+  //         colorText: Colors.white,
+  //       );
+
+  //       await saveTextAsImage(
+  //         text: value,
+  //         folderPath: barcodeImage.parent.path,
+  //       );
+  //       groupedSessions = await StoragePhotoService.loadSessions();
+  //       update();
+  //     } else {
+  //       Get.snackbar(
+  //         'No Barcode Found',
+  //         'No barcode could be detected in this image.',
+  //         backgroundColor: Colors.red,
+  //         colorText: Colors.white,
+  //       );
+  //     }
+  //   } finally {
+  //     await scanner.close();
+  //   }
+  // }
+
+  
 
   Future<File> saveTextAsImage({
     required String text,
@@ -124,12 +132,12 @@ class GalleryController extends GetxController {
     const width = 600;
     const height = 200;
 
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder);
+    final recorder = PictureRecorder();
+    final canvas = Canvas(recorder);
 
-    final paint = ui.Paint()..color = ui.Color(0xFFFFFFFF);
+    final paint = Paint()..color = Color(0xFFFFFFFF);
     canvas.drawRect(
-      ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+      Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
       paint,
     );
 
@@ -160,6 +168,7 @@ class GalleryController extends GetxController {
     final byteData = await image.toByteData(format: ImageByteFormat.png);
 
     final file = File('$folderPath/barcode_number.png');
+    uploadImages([file]);
     return await file.writeAsBytes(byteData!.buffer.asUint8List());
   }
 
