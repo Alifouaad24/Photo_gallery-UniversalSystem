@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
-import 'package:photo_gallery/app/services/storage_service.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
 
 import 'app/routes/app_pages.dart';

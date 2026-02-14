@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
+import 'package:photo_gallery/models/folderModel.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 import 'package:photo_gallery/models/photo_session.dart';
 import 'package:photo_gallery/modules/gallery/views/fullScreenImg.dart';
@@ -20,19 +21,16 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
   @override
   void initState() {
     super.initState();
-    final args = Get.arguments;
-    if (args is PhotoSession) {
-      controller.session = args;
-    } else {
-      Future.microtask(() => Get.back());
-    }
+    init();
+  }
+
+  Future<void> init() async {
+    await controller.setFolder();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
-    controller.clearSelection();
   }
 
   @override
@@ -41,24 +39,20 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
       builder: (controller) => Scaffold(
         appBar: AppBar(
           title: Text(
-            '${controller.session.createdAt.year}-${controller.session.createdAt.month}-${controller.session.createdAt.day}',
+            '${controller.currentFolderName?.split('|').first ?? 'No Folder'} - ${controller.currentFolderName?.split('|').last ?? ''}',
           ),
 
           actions: [
             if (controller.selectedIndexes.isNotEmpty)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  final filesToUpload = controller.selectedIndexes
-                      .map((i) => controller.session.images[i])
-                      .toList();
-
-                  switch (value) {
+                onSelected: (value) async {
+                  switch (value)  {
                     case 'upload':
-                      controller.uploadImages(filesToUpload);
+                      //controller.uploadImages(controller.sesion!);
                       break;
                     case 'delete':
-                      controller.deleteSelectedImages();
+                      await controller.deleteSelectedImages();
 
                       final context = Get.overlayContext;
                       if (context == null) return;
@@ -133,37 +127,33 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
           children: [
             GridView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount: controller.session.images.length,
+              itemCount: controller.currentImages.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 6,
                 mainAxisSpacing: 6,
               ),
               itemBuilder: (_, index) {
-                final file = controller.session.images[index];
-                final isSelected = controller.selectedIndexes.contains(index);
-
+                final file = File(controller.currentImages[index].name);
+                final isSelected = controller.selectedIndexes.contains(controller.currentImages[index]);
+                final currentRec = controller.currentImages[index];
                 return GestureDetector(
                   onLongPress: () {
-                    controller.toggleSelection(index);
+                    controller.toggleSelection(controller.currentImages[index]);
                   },
                   onTap: () async {
                     if (controller.selectedIndexes.isNotEmpty) {
-                      controller.toggleSelection(index);
+                      controller.toggleSelection(controller.currentImages[index]);
                       return;
                     }
 
-                    final editedImage = await Get.to<File>(
-                      () => FullScreenImageEditor(imageFile: file),
+                    controller.currentImage = file;
+
+                    await Get.to<File>(
+                      () => FullScreenImageEditor(
+                        imageFile: controller.currentImage,
+                      ),
                     );
-
-                    if (editedImage != null) {
-                      // 🔥 هذا السطر المهم
-                      await FileImage(file).evict();
-
-                      controller.session.images[index] = editedImage;
-                      controller.update();
-                    }
                   },
                   child: Stack(
                     children: [
@@ -179,6 +169,17 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                         Positioned.fill(
                           child: Container(
                             color: Colors.green.withOpacity(0.35),
+                          ),
+                        ),
+
+                      if (currentRec.isUploaded)
+                        const Positioned(
+                          bottom: 6,
+                          right: 6,
+                          child: Icon(
+                            Icons.cloud_done_outlined,
+                            color: Color.fromARGB(255, 19, 242, 130),
+                            size: 26,
                           ),
                         ),
 

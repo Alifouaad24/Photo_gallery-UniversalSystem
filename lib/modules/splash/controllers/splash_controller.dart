@@ -14,16 +14,12 @@ class SplashController extends GetxController {
   int? selectedBusinessId;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     initializeSettings();
-    selectedBusinessId = storageService.readInt('business_id');
-    if (selectedBusinessId == null && userResponse != null && userResponse!.businesses.isNotEmpty) {
-      storageService.writeInt('business_id', userResponse!.businesses.first.businessId);
-    }
   }
 
-   void selectBusiness(Business business) {
+  void selectBusiness(Business business) {
     selectedBusinessId = business.businessId;
     storageService.writeInt('business_id', business.businessId);
     update();
@@ -34,10 +30,13 @@ class SplashController extends GetxController {
 
     return userResponse!.businesses.firstWhere(
       (b) => b.businessId == selectedBusinessId,
-      orElse: (){
-        storageService.writeInt('business_id', userResponse!.businesses.first.businessId);
+      orElse: () {
+        storageService.writeInt(
+          'business_id',
+          userResponse!.businesses.first.businessId,
+        );
         return userResponse!.businesses.first;
-      } 
+      },
     );
   }
 
@@ -50,6 +49,15 @@ class SplashController extends GetxController {
       },
       (data) {
         userResponse = data;
+        selectedBusinessId = storageService.readInt('business_id');
+        if (selectedBusinessId == null &&
+            userResponse != null &&
+            userResponse!.businesses.isNotEmpty) {
+          storageService.writeInt(
+            'business_id',
+            userResponse!.businesses.first.businessId,
+          );
+        }
         Get.toNamed(Routes.home);
       },
     );

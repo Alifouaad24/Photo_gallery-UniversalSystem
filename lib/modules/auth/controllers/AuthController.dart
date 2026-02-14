@@ -5,21 +5,22 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
-import 'package:photo_gallery/app/services/storage_service.dart';
 import 'package:photo_gallery/data/repository/auth_repository.dart';
 import 'package:photo_gallery/main.dart';
+import 'package:photo_gallery/models/splashResponseModel.dart';
 import 'package:photo_gallery/modules/splash/controllers/splash_controller.dart';
 
 class AuthController extends GetxController {
-
   final AuthRepository _authRepository = AuthRepository();
   final StorageLocalService _storageService = Get.find<StorageLocalService>();
+  StorageLocalService storageService = Get.find<StorageLocalService>();
   final SplashController _splashController = Get.put(SplashController());
 
+  UserResponse? userResponse;
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   bool loading = false;
-
+  int? selectedBusinessId;
   Future<void> login() async {
     loading = true;
     update();
@@ -38,19 +39,13 @@ class AuthController extends GetxController {
         loading = false;
         update();
       },
-      (user) {
+      (user) async {
         loading = false;
         update();
         _storageService.writeString('token', user.token);
         Future.delayed(const Duration(milliseconds: 500), () {});
         token = user.token;
-        _splashController.initializeSettings();
-        Get.snackbar(
-          'Login Successful',
-          'Welcome!',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        //Get.offAllNamed(Routes.home);
+        await _splashController.initializeSettings();
       },
     );
   }

@@ -7,7 +7,6 @@ import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dar
 class CameraBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => CameraController());
-    Get.lazyPut(() => GalleryController());
+    Get.lazyPut<CameraGetController>(() => CameraGetController());
   }
 }
