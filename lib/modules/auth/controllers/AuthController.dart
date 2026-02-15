@@ -17,8 +17,8 @@ class AuthController extends GetxController {
   final SplashController _splashController = Get.put(SplashController());
 
   UserResponse? userResponse;
-  final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
+  final emailCtrl = TextEditingController(text: 'demo@apx.com');
+  final passCtrl = TextEditingController(text: '06362');
   bool loading = false;
   int? selectedBusinessId;
   Future<void> login() async {

@@ -63,41 +63,46 @@ class HomeScreen extends StatelessWidget {
         ],
         automaticallyImplyLeading: false,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('Open camera'),
-              style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
-              onPressed: () async {
-                final changed = await Get.toNamed(Routes.cameraSession);
-
-                if (changed == true) {
+      body: GetBuilder<HomeController>(
+        builder: (controller) => 
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text("current version: ${controller.version}"),
+              SizedBox(height: 150,),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('Open camera'),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
+                onPressed: () async {
+                  final changed = await Get.toNamed(Routes.cameraSession);
+        
+                  if (changed == true) {
+                    Get.toNamed(Routes.gallery);
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.photo_library),
+                label: const Text('Gallery'),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
+                onPressed: () {
                   Get.toNamed(Routes.gallery);
-                }
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.photo_library),
-              label: const Text('Gallery'),
-              style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
-              onPressed: () {
-                Get.toNamed(Routes.gallery);
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add_box),
-              label: const Text('Add item'),
-              style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
-              onPressed: () async {
-                Get.toNamed(Routes.addItemScreen);
-              },
-            ),
-          ],
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add_box),
+                label: const Text('Add item'),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
+                onPressed: () async {
+                  Get.toNamed(Routes.addItemScreen);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
