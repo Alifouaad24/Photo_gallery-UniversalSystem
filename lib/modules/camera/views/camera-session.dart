@@ -43,6 +43,7 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
   @override
   void dispose() {
     controller.endCameraSession();
+    controller.currentFolderId = null;
     super.dispose();
   }
 
@@ -72,7 +73,6 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                   ),
                 ),
               ),
-
               Positioned(
                 bottom: 40,
                 left: 0,
@@ -96,7 +96,7 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                 child: IconButton(
                   color: const Color.fromARGB(255, 91, 198, 41),
                   iconSize: 40,
-                  icon: const Icon(Icons.save),
+                  icon: const Icon(Icons.close),
                   onPressed: () {
                     Get.offAllNamed(Routes.home);
                   },

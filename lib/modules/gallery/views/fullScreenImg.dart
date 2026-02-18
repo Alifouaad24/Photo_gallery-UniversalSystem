@@ -7,26 +7,29 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
 
 class FullScreenImageEditor extends StatefulWidget {
-  final File imageFile;
+  final int initialIndex;
 
-  const FullScreenImageEditor({super.key, required this.imageFile});
+  const FullScreenImageEditor({super.key, required this.initialIndex});
 
   @override
   State<FullScreenImageEditor> createState() => _FullScreenImageEditorState();
 }
 
 class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
+  late PageController _pageController;
+  int currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: currentIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<GalleryController>(
-       builder: (controller) =>
-      Scaffold(
+      builder: (controller) => Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.black,
@@ -39,10 +42,27 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
             ),
           ],
         ),
-        body: Center(
-          child: InteractiveViewer(
-            child: Image.file(controller.currentImage),
-          ),
+        body: GetBuilder<GalleryController>(
+          builder: (controller) {
+            return PageView.builder(
+              controller: _pageController,
+              itemCount: controller.currentImages.length,
+              onPageChanged: (index) {
+                currentIndex = index;
+                controller.currentImage = File(
+                  controller.currentImages[index].name,
+                );
+                controller.update();
+              },
+              itemBuilder: (context, index) {
+                final file = File(controller.currentImages[index].name);
+
+                return Center(
+                  child: InteractiveViewer(child: Image.file(file)),
+                );
+              },
+            );
+          },
         ),
         bottomNavigationBar: _buildToolsBar(),
       ),
@@ -51,8 +71,7 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
 
   Widget _buildToolsBar() {
     return GetBuilder<GalleryController>(
-      builder: (controller) => 
-      BottomAppBar(
+      builder: (controller) => BottomAppBar(
         color: Colors.black,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -80,6 +99,4 @@ class _FullScreenImageEditorState extends State<FullScreenImageEditor> {
       ),
     );
   }
-
-  
 }

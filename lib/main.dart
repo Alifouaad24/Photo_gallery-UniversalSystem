@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
+import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
@@ -16,6 +17,7 @@ void main() async {
   token = storageService.readString('token');
   await PermissionService.requestCameraAndStorage();
   Get.put(DioClient());
+  Get.put(CameraGetController());
   runApp(const MyApp());
 }
 

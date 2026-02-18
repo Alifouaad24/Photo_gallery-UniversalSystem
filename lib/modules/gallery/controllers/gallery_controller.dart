@@ -116,6 +116,7 @@ Future<void> loadSessions() async {
       selectedIndexes.add(rec);
       sesion.add(rec.name);
     }
+    
     update();
   }
 
@@ -147,7 +148,7 @@ Future<void> loadSessions() async {
     }
     isLoading = true;
     update();
-    final result = await galleryRepo.uploadImages(files, businessId);
+    final result = await galleryRepo.uploadImages(files, businessId, folderId!);
     result.fold(
       (error) {
         isLoading = false;

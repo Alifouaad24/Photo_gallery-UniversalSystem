@@ -57,7 +57,7 @@ class AppPages {
     ),
     GetPage(
       name: Routes.FullScreenImage,
-      page: () => FullScreenImageEditor(imageFile: null!),
+      page: () => FullScreenImageEditor(initialIndex: 0,),
     ),
      GetPage(
       name: Routes.addItemScreen,

@@ -33,7 +33,6 @@ class CameraGetController extends GetxController {
 
   Future<void> initCamera() async {
     final cameras = await availableCameras();
-
     camera = CameraController(
       cameras.first,
       ResolutionPreset.high,
@@ -50,24 +49,26 @@ class CameraGetController extends GetxController {
       await camera!.dispose();
       camera = null;
       cameraReady = false;
+      currentFolderId = null;
     }
   }
 
   // ================= SESSION =================
 
   Future<void> startCameraSession() async {
-    if (currentFolderId != null) return;
+    print('########################################################currentFolderId: $currentFolderId');
     final dir = await getApplicationDocumentsDirectory();
     final mainFolder = Directory('${dir.path}/ApxGallery');
+
     if (!await mainFolder.exists()) {
       await mainFolder.create(recursive: true);
     }
 
-    sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
+    // sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
 
-    if (!await sessionFolder!.exists()) {
-      await sessionFolder!.create(recursive: true);
-    }
+    // if (!await sessionFolder!.exists()) {
+    //   await sessionFolder!.create(recursive: true);
+    // }
 
     images.clear();
     update();
@@ -94,7 +95,7 @@ class CameraGetController extends GetxController {
         sessionFolder == null)
       return;
 
-    if (images.isEmpty) {
+    if (images.isEmpty && currentFolderId == null) {
       final folderName = DateTime.now()
           .toString()
           .substring(0, 19)
@@ -137,7 +138,7 @@ class CameraGetController extends GetxController {
     isLoading = true;
     update();
 
-    final result = await galleryRepo.uploadImages([file], businessId);
+    final result = await galleryRepo.uploadImages([file], businessId, currentFolderId!);
 
     bool success = false;
 

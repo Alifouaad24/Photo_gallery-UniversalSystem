@@ -15,6 +15,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: GetBuilder<AddItemController>(
         builder: (controller) => Stack(
           children: [
