@@ -21,6 +21,7 @@ class AuthController extends GetxController {
   final passCtrl = TextEditingController(text: '06362');
   bool loading = false;
   int? selectedBusinessId;
+
   Future<void> login() async {
     loading = true;
     update();
@@ -46,13 +47,15 @@ class AuthController extends GetxController {
         Future.delayed(const Duration(milliseconds: 500), () {});
         token = user.token;
         await _splashController.initializeSettings();
+        update();
       },
     );
   }
 
-  void logout() {
-    _storageService.remove('token');
-    _storageService.remove('business_id');
+  void logout() async {
+    await _storageService.remove('token');
+    await _storageService.remove('business_id');
+    token = null;
     Get.offAllNamed(Routes.login);
   }
 }

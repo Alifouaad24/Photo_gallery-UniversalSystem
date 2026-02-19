@@ -56,7 +56,9 @@ class CameraGetController extends GetxController {
   // ================= SESSION =================
 
   Future<void> startCameraSession() async {
-    print('########################################################currentFolderId: $currentFolderId');
+    print(
+      '########################################################currentFolderId: $currentFolderId',
+    );
     final dir = await getApplicationDocumentsDirectory();
     final mainFolder = Directory('${dir.path}/ApxGallery');
 
@@ -64,11 +66,20 @@ class CameraGetController extends GetxController {
       await mainFolder.create(recursive: true);
     }
 
-    // sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
+    if (currentFolderId != null) {
+      sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
+    } else {
+      final folderName = DateTime.now()
+          .toString()
+          .substring(0, 19)
+          .replaceAll(' ', '|');
+      currentFolderId = await db!.insert('folder', {'name': folderName});
+      sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
+    }
 
-    // if (!await sessionFolder!.exists()) {
-    //   await sessionFolder!.create(recursive: true);
-    // }
+    if (!await sessionFolder!.exists()) {
+      await sessionFolder!.create(recursive: true);
+    }
 
     images.clear();
     update();
@@ -95,24 +106,12 @@ class CameraGetController extends GetxController {
         sessionFolder == null)
       return;
 
-    if (images.isEmpty && currentFolderId == null) {
-      final folderName = DateTime.now()
-          .toString()
-          .substring(0, 19)
-          .replaceAll(' ', '|');
-
-      currentFolderId = await db!.insert('folder', {'name': folderName});
-    }
 
     final xFile = await camera!.takePicture();
-
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-
     final newPath = '${sessionFolder!.path}/$fileName';
     final newImage = await File(xFile.path).copy(newPath);
-
     final uploaded = await uploadImages(newImage);
-
     final id = await db!.insert('image', {
       'folder_id': currentFolderId,
       'name': newImage.path,
@@ -138,7 +137,11 @@ class CameraGetController extends GetxController {
     isLoading = true;
     update();
 
-    final result = await galleryRepo.uploadImages([file], businessId, currentFolderId!);
+    final result = await galleryRepo.uploadImages(
+      [file],
+      businessId,
+      currentFolderId!,
+    );
 
     bool success = false;
 

@@ -93,14 +93,14 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add_box),
-                label: const Text('Add item'),
-                style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
-                onPressed: () async {
-                  Get.toNamed(Routes.addItemScreen);
-                },
-              ),
+              // ElevatedButton.icon(
+              //   icon: const Icon(Icons.add_box),
+              //   label: const Text('Add item'),
+              //   style: ElevatedButton.styleFrom(minimumSize: const Size(220, 55)),
+              //   onPressed: () async {
+              //     Get.toNamed(Routes.addItemScreen);
+              //   },
+              // ),
             ],
           ),
         ),

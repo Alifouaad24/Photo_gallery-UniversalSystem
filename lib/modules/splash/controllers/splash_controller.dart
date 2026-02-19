@@ -58,6 +58,7 @@ class SplashController extends GetxController {
             userResponse!.businesses.first.businessId,
           );
         }
+        update();
         Get.toNamed(Routes.home);
       },
     );
