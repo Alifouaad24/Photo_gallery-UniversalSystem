@@ -48,11 +48,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
             itemBuilder: (_, i) {
               final date = dates[i];
               final sessionsOfDay = groupedByDate[date]!;
-              for (var i in sessionsOfDay) {
-                print(
-                  'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii: ${i.name}',
-                );
-              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
