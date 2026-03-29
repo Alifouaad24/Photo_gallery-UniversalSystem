@@ -168,6 +168,7 @@ class SessionFolderList extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            
                             Positioned(
                               top: 6,
                               left: 6,
