@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
+import 'package:photo_gallery/app/services/backGroundUploader.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
+import 'package:photo_gallery/data/repository/gallery_repository.dart';
 import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 
 import 'app/routes/app_pages.dart';
@@ -14,10 +16,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   StorageLocalService storageService = Get.put(StorageLocalService());
+  final backgroundUploader = Get.put(
+    BackgroundUploaderService(
+      storageService: storageService,
+      galleryRepository: GalleryRepository(),
+    ),
+    permanent: true,
+  );
   token = storageService.readString('token');
   await PermissionService.requestCameraAndStorage();
   Get.put(DioClient());
   Get.put(CameraGetController());
+  await backgroundUploader.init();
   runApp(const MyApp());
 }
 

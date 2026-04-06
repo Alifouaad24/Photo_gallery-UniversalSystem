@@ -82,8 +82,9 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                     onPressed: () async {
                       SystemSound.play(SystemSoundType.click);
                       HapticFeedback.lightImpact();
-                      await controller.takePicture();
                       _showFlash();
+                      await controller.takePicture();
+                     
                     },
                     child: const Icon(Icons.camera),
                   ),

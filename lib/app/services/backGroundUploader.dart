@@ -1,74 +1,87 @@
-// import 'dart:io';
+import 'dart:async';
+import 'dart:io';
 
-// import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'package:dio/dio.dart';
-// import 'package:get/get_connect/http/src/multipart/form_data.dart';
-// import 'package:get/get_connect/http/src/multipart/multipart_file.dart';
-// import 'package:photo_gallery/data/local/data_base.dart';
-// import 'package:photo_gallery/main.dart';
-// import 'package:photo_gallery/models/folderModel.dart';
-// import 'package:photo_gallery/modules/gallery/controllers/gallery_controller.dart';
-// import 'package:workmanager/workmanager.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
+import 'package:photo_gallery/data/local/data_base.dart';
+import 'package:photo_gallery/data/repository/gallery_repository.dart';
 
-// class Backgrounduploader {
-//   GalleryController gallCont = GalleryController();
-//   List<File>? listFiles;
-//   Future<bool> isConnected() async {
-//     var result = await Connectivity().checkConnectivity();
-//     return result != ConnectivityResult.none;
-//   }
+class BackgroundUploaderService {
+	BackgroundUploaderService({
+		required this.storageService,
+		required this.galleryRepository,
+	});
 
-//   void callbackDispatcher() {
-//     Workmanager().executeTask((task, inputData) async {
-//       print("Background task executed: $task");
+	final StorageLocalService storageService;
+	final GalleryRepository galleryRepository;
 
-//       var connectivity = await Connectivity().checkConnectivity();
-//       if (connectivity == ConnectivityResult.none) {
-//         print("No internet connection, skipping upload.");
-//         return Future.value(false);
-//       }
+	StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+	bool _isSyncing = false;
 
-//       final database = await DatabaseHelper().database;
-//       final imagesJson = await database.query(
-//         'images',
-//         where: 'isUploaded = ?',
-//         whereArgs: [0],
-//       );
-//       final images = imagesJson.map((e) => ImageItem.fromMap(e)).toList();
+	Future<void> init() async {
+		await trySyncPendingImages();
 
-//       List<File> filesToUpload = [];
-//       for (var img in images) {
-//         final file = File(img.name);
-//         if (await file.exists()) {
-//           filesToUpload.add(file);
-//         }
-//       }
+		_connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+			result,
+		) {
+			if (result != ConnectivityResult.none) {
+				trySyncPendingImages();
+			}
+		});
+	}
 
-//       try {
-//         final formData = FormData();
+	Future<void> trySyncPendingImages() async {
+		if (_isSyncing) return;
 
-//         for (final file in filesToUpload) {
-//           formData.files.add(
-//             MapEntry(
-//               'Images',
-//               await MultipartFile.fromFile(
-//                 file.path,
-//                 filename: file.path.split('/').last,
-//               ),
-//             ),
-//           );
-//         }
+		final businessId = storageService.readInt('business_id') ?? 0;
+		if (businessId == 0) return;
 
-//         formData.fields.add(MapEntry('BusinessId', businessId.toString()));
+		final connectivityResult = await Connectivity().checkConnectivity();
+		if (connectivityResult == ConnectivityResult.none) return;
 
-//         final response = await _dio.post(
-//           '/ImageUploader',
-//           data: formData,
-//           options: Options(headers: {'Authorization': 'Bearer $token'}),
-//         );
-//       } on DioException catch (e) {}
+		_isSyncing = true;
 
-//       return Future.value(true);
-//     });
-//   }
-// }
+		try {
+			final db = await DatabaseHelper().database;
+			final pendingImages = await db.query(
+				'image',
+				where: 'isUploaded = ?',
+				whereArgs: [0],
+				orderBy: 'id ASC',
+			);
+
+			for (final row in pendingImages) {
+				final imageId = row['id'] as int;
+				final imagePath = row['name'] as String;
+				final folderId = row['folder_id'] as int;
+
+				final file = File(imagePath);
+				if (!await file.exists()) {
+					continue;
+				}
+
+				final result = await galleryRepository.uploadImages(
+					[file],
+					businessId,
+					folderId,
+				);
+
+				final success = result.fold((_) => false, (_) => true);
+				if (success) {
+					await db.update(
+						'image',
+						{'isUploaded': 1},
+						where: 'id = ?',
+						whereArgs: [imageId],
+					);
+				}
+			}
+		} finally {
+			_isSyncing = false;
+		}
+	}
+
+	Future<void> dispose() async {
+		await _connectivitySubscription?.cancel();
+	}
+}
