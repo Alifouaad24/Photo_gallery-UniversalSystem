@@ -12,6 +12,7 @@ class DioClient {
       ),
     );
 
+
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
