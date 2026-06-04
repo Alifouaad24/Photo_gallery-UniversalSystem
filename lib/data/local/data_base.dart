@@ -26,7 +26,8 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE folder(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      business_name TEXT DEFAULT ''
     )
   ''');
 
@@ -36,6 +37,7 @@ class DatabaseHelper {
       name TEXT NOT NULL,
       folder_id INTEGER NOT NULL,
       isUploaded INTEGER DEFAULT 0,
+      business_name TEXT DEFAULT '',
       FOREIGN KEY(folder_id) REFERENCES folder(id) ON DELETE CASCADE
     )
   ''');

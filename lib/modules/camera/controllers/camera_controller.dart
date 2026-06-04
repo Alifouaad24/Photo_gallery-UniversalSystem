@@ -73,7 +73,9 @@ class CameraGetController extends GetxController {
           .toString()
           .substring(0, 19)
           .replaceAll(' ', '|');
-      currentFolderId = await db!.insert('folder', {'name': folderName});
+      currentFolderId = await db!.insert('folder', {'name': folderName, 'business_name': storageService.readString('business_Name') ?? ''});
+      print(currentFolderId);
+      print(storageService.readString('business_Name'));
       sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
     }
 

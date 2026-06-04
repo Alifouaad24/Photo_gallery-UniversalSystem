@@ -96,27 +96,34 @@ class GalleryController extends GetxController {
     return file;
   }
 
-Future<void> loadSessions() async {
-    groupedSessions = await db.query('folder', orderBy: 'id DESC');
+  Future<void> loadSessions() async {
+    groupedSessions = await db.query(
+      'folder',
+      where: 'business_name = ?',
+      whereArgs: [storageService.readString('business_Name')],
+      orderBy: 'id DESC',
+    );
+    print('storageService: ${storageService.readString('business_Name')}');
+    print('groupedSessions: $groupedSessions');
     Sessions.clear();
     Sessions = groupedSessions.map((e) => Folder.fromMap(e)).toList();
-    for(var s in Sessions){
-      print(s.name);
+    for (var s in Sessions) {
+      print(s.businessName);
     }
     update();
-}
+  }
 
   List<String> sesion = [];
 
   void toggleSelection(ImageItem rec) {
     if (selectedIndexes.contains(rec)) {
       selectedIndexes.remove(rec);
-      sesion.remove(rec.name); 
+      sesion.remove(rec.name);
     } else {
       selectedIndexes.add(rec);
       sesion.add(rec.name);
     }
-    
+
     update();
   }
 

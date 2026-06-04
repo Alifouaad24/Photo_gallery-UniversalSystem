@@ -17,10 +17,18 @@ class AuthController extends GetxController {
   final SplashController _splashController = Get.put(SplashController());
 
   UserResponse? userResponse;
-  final emailCtrl = TextEditingController(text: "demo@apx.com");
-  final passCtrl = TextEditingController(text: "06362");
+  
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
   bool loading = false;
   int? selectedBusinessId;
+
+  @override
+  void onInit() {
+    super.onInit();
+    emailCtrl.text = _storageService.readString('email') ?? '';
+    passCtrl.text = _storageService.readString('password') ?? '';
+  }
 
   Future<void> login() async {
     loading = true;
@@ -44,6 +52,8 @@ class AuthController extends GetxController {
         loading = false;
         update();
         _storageService.writeString('token', user.token);
+        _storageService.writeString('email', emailCtrl.text.trim());
+        _storageService.writeString('password', passCtrl.text.trim());
         Future.delayed(const Duration(milliseconds: 500), () {});
         token = user.token;
         await _splashController.initializeSettings();
