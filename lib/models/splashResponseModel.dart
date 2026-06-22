@@ -10,14 +10,15 @@ class UserResponse {
   });
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
-    return UserResponse(
-      email: json['email'],
-      userName: json['userName'],
-      businesses: (json['businesses'] as List)
-          .map((e) => Business.fromJson(e))
-          .toList(),
-    );
-  }
+  return UserResponse(
+    email: json['email'] ?? '',
+    userName: json['userName'] ?? '',
+    businesses: (json['businesses'] as List?)
+            ?.map((e) => Business.fromJson(e))
+            .toList() ??
+        [],
+  );
+}
 }
 
 
@@ -46,26 +47,32 @@ class Business {
     required this.businessServices,
   });
 
-  factory Business.fromJson(Map<String, dynamic> json) {
-    return Business(
-      businessId: json['business_id'],
-      businessName: json['business_name'],
-      businessLogoUrl: json['business_LogoUrl'] ?? '',
-      countryId: json['countryId'],
-      isActive: json['is_active'],
-      businessPhone: json['business_phone'],
-      businessEmail: json['business_email'],
-      activities: (json['activities'] as List)
-          .map((e) => Activity.fromJson(e))
-          .toList(),
-      businessTypes: (json['businessTypes'] as List)
-          .map((e) => BusinessTypeLink.fromJson(e))
-          .toList(),
-      businessServices: (json['business_Services'] as List)
-          .map((e) => BusinessService.fromJson(e))
-          .toList(),
-    );
-  }
+ factory Business.fromJson(Map<String, dynamic> json) {
+  return Business(
+    businessId: json['business_id'],
+    businessName: json['business_name'] ?? '',
+    businessLogoUrl: json['business_LogoUrl'] ?? '',
+    countryId: json['countryId'] ?? 0,
+    isActive: json['is_active'] ?? false,
+    businessPhone: json['business_phone'] ?? '',
+    businessEmail: json['business_email'] ?? '',
+
+    activities: (json['business_Activitiy'] as List?)
+            ?.map((e) => Activity.fromJson(e))
+            .toList() ??
+        [],
+
+    businessTypes: (json['businessTypes'] as List?)
+            ?.map((e) => BusinessTypeLink.fromJson(e))
+            .toList() ??
+        [],
+
+    businessServices: (json['business_Services'] as List?)
+            ?.map((e) => BusinessService.fromJson(e))
+            .toList() ??
+        [],
+  );
+}
 }
 
 
@@ -83,8 +90,8 @@ class Activity {
   factory Activity.fromJson(Map<String, dynamic> json) {
     return Activity(
       activityId: json['activity_id'],
-      description: json['description'],
-      visible: json['visible'],
+      description: json['description'] ?? '',
+      visible: json['visible'] ?? false,
     );
   }
 }
@@ -118,7 +125,7 @@ class BusinessType {
   factory BusinessType.fromJson(Map<String, dynamic> json) {
     return BusinessType(
       businessTypeId: json['business_type_id'],
-      description: json['description'],
+      description: json['description'] ?? '',
     );
   }
 }

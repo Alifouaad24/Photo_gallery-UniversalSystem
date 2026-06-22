@@ -18,9 +18,11 @@ class LoginResponse {
       message: json['message'],
       user: AppUser.fromJson(json['user']),
       token: json['token'],
-      businesses: (json['businesses'] as List)
-          .map((e) => Business.fromJson(e))
-          .toList(),
+      businesses:
+          (json['businesses'] as List<dynamic>?)
+              ?.map((e) => Business.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }
@@ -30,11 +32,7 @@ class AppUser {
   final String userName;
   final String email;
 
-  AppUser({
-    required this.id,
-    required this.userName,
-    required this.email,
-  });
+  AppUser({required this.id, required this.userName, required this.email});
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(

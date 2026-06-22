@@ -25,12 +25,14 @@ class AuthRepository {
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         final errorData = e.response?.data;
-        final errorMessage = errorData['message'] ?? 'Login failed';
+        final errorMessage = errorData ?? 'Login failed';
+        print(e);
         return Left(errorMessage);
       } else {
         return Left('Network error occurred');
       }
     } catch (e) {
+      print(e);
       return Left('An unexpected error occurred');
     }
   }
