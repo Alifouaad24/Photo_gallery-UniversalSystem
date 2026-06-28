@@ -69,7 +69,9 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text("current version: ${controller.version}"),
+              Text("Release Date: ${HomeController.releaseDate}"),
+              SizedBox(height: 10,),
+              Text("User: ${controller.userName}"),
               SizedBox(height: 150,),
               ElevatedButton.icon(
                 icon: const Icon(Icons.camera_alt),

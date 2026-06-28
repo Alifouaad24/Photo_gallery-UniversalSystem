@@ -22,10 +22,7 @@ class SplashController extends GetxController {
   void selectBusiness(Business business) {
     selectedBusinessId = business.businessId;
     storageService.writeInt('business_id', business.businessId);
-    storageService.writeString(
-      'business_Name',
-      business.businessName,
-    );
+    storageService.writeString('business_Name', business.businessName);
 
     update();
   }
@@ -54,6 +51,8 @@ class SplashController extends GetxController {
       },
       (data) {
         userResponse = data;
+        storageService.writeString('usaerName', data.userName);
+
         selectedBusinessId = storageService.readInt('business_id');
         if (selectedBusinessId == null &&
             userResponse != null &&

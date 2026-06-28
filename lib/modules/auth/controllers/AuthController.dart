@@ -52,6 +52,7 @@ class AuthController extends GetxController {
         loading = false;
         update();
         _storageService.writeString('token', user.token);
+        _storageService.writeString('usaerName', user.user.userName);
         _storageService.writeString('email', emailCtrl.text.trim());
         _storageService.writeString('password', passCtrl.text.trim());
         Future.delayed(const Duration(milliseconds: 500), () {});
