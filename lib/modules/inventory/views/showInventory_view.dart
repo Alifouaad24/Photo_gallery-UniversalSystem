@@ -34,6 +34,7 @@ class ShowinventoryView extends StatelessWidget {
           if (controller.inventoryList.isEmpty) {
             return Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment .center,
                 children: [
                   Text("No Inventory Found", style: TextStyle(fontSize: 18)),
                   OutlinedButton.icon(

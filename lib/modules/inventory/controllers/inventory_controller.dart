@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/data/repository/inventory_repository.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
 
 class InventoryController extends GetxController {
   final inventoryRepo = InventoryRepository();
+  final StorageLocalService _storageService = Get.find<StorageLocalService>();
   bool isLoading = false;
   List<InventoryModel> inventoryList = [];
   String? errorMessage;
@@ -13,7 +15,10 @@ class InventoryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getInventory(27);
+    var businessId = _storageService.readInt('business_id');
+    if (businessId != null) {
+      getInventory(businessId);
+    }
   }
 
   Future<void> getInventory(int busId) async {
