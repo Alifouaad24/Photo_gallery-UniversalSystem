@@ -66,8 +66,8 @@ class _LoginCardState extends State<_LoginCard> {
 
   @override
   void dispose() {
-    widget.controller.emailCtrl.dispose();
-    widget.controller.passCtrl.dispose();
+    // widget.controller.emailCtrl.dispose();
+    // widget.controller.passCtrl.dispose();
     super.dispose();
   }
 
@@ -117,12 +117,12 @@ class _LoginCardState extends State<_LoginCard> {
                             width: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: Color.fromARGB(255, 255, 255, 255),
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'تسجيل الدخول',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 255, 255),),
                           ),
                   ),
                 );
