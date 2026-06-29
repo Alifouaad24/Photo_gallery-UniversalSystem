@@ -80,6 +80,8 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                 child: Center(
                   child: FloatingActionButton(
                     onPressed: () async {
+                      if(controller.takingPhoto) return;
+                      
                       SystemSound.play(SystemSoundType.click);
                       HapticFeedback.lightImpact();
                       _showFlash();
