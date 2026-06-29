@@ -4,6 +4,7 @@ import 'package:get/get_instance/src/bindings_interface.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/bindings/Inventory_binding.dart';
 import 'package:photo_gallery/app/bindings/add_item_binding.dart';
 import 'package:photo_gallery/app/bindings/auth_binding.dart';
 import 'package:photo_gallery/app/bindings/camera_binding.dart';
@@ -18,6 +19,7 @@ import 'package:photo_gallery/modules/gallery/views/fullScreenImg.dart';
 import 'package:photo_gallery/modules/gallery/views/gallery-screen.dart';
 import 'package:photo_gallery/modules/gallery/views/session_photos_screen.dart';
 import 'package:photo_gallery/modules/home/views/home-screen.dart';
+import 'package:photo_gallery/modules/inventory/views/showInventory_view.dart';
 import 'package:photo_gallery/modules/splash/views/splash_screen.dart';
 import 'package:photo_gallery/widgets/session_folder_item.dart';
 
@@ -63,6 +65,11 @@ class AppPages {
       name: Routes.addItemScreen,
       page: () => AddItemScreen(),
       binding: AddItemBinding(),
+    ),
+    GetPage(
+      name: Routes.showInventory,
+      page: () => ShowinventoryView(),
+      binding: InventoryBinding(),
     ),
   ];
 }

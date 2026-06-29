@@ -7,4 +7,5 @@ class Routes {
   static const String SessionPhotosScreen = '/session-photos';
   static const String FullScreenImage = '/full-screen-image';
   static const String addItemScreen = '/add-item';
+  static const String showInventory = '/showInventory';
 }

@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: Routes.splash,
       getPages: AppPages.pages,
-      theme: ThemeData.dark(),
+      theme: ThemeData.light(),
     );
   }
 }
