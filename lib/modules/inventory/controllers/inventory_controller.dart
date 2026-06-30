@@ -65,6 +65,7 @@ class InventoryController extends GetxController {
 
     final result = await inventoryRepo.changeInvItemQty(inventoryId, qty);
 
+
     result.fold(
       (error) {
         errorMessage = error.toString();
