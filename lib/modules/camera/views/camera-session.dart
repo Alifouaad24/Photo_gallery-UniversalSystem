@@ -22,8 +22,9 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
   }
 
   Future<void> _init() async {
-    await controller.initCamera();
     await controller.startCameraSession();
+    await controller.initCamera();
+    setState(() {});
   }
 
   void _showFlash() {
@@ -80,13 +81,12 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                 child: Center(
                   child: FloatingActionButton(
                     onPressed: () async {
-                      if(controller.takingPhoto) return;
-                      
+                      if (controller.takingPhoto) return;
+
                       SystemSound.play(SystemSoundType.click);
                       HapticFeedback.lightImpact();
                       _showFlash();
-                      await controller.takePicture();
-                     
+                      await controller.takePicture(context);
                     },
                     child: const Icon(Icons.camera),
                   ),

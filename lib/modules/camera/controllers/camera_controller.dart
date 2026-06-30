@@ -106,36 +106,46 @@ class CameraGetController extends GetxController {
 
   bool takingPhoto = false;
 
-  Future<void> takePicture() async {
+  Future<void> takePicture(BuildContext context) async {
     if (!cameraReady ||
         camera == null ||
         images.length >= 10 ||
-        sessionFolder == null)
+        sessionFolder == null) {
       return;
+    }
 
     takingPhoto = true;
     update();
 
-    final xFile = await camera!.takePicture();
+    try {
+      final xFile = await camera!.takePicture();
 
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final newPath = '${sessionFolder!.path}/$fileName';
-    final newImage = await File(xFile.path).copy(newPath);
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final newPath = '${sessionFolder!.path}/$fileName';
+      final newImage = await File(xFile.path).copy(newPath);
 
-    // احفظها محلياً أولاً
-    final id = await db!.insert('image', {
-      'folder_id': currentFolderId,
-      'name': newImage.path,
-      'isUploaded': 0,
-    });
+      // احفظها محلياً أولاً
+      final id = await db!.insert('image', {
+        'folder_id': currentFolderId,
+        'name': newImage.path,
+        'isUploaded': 0,
+      });
 
-    images.add({'id': id, 'name': newImage.path, 'isUploaded': 0});
+      images.add({'id': id, 'name': newImage.path, 'isUploaded': 0});
 
-    takingPhoto = false;
-    update();
-
-    // ارفعها في الخلفية
-    _uploadImageInBackground(id, newImage);
+      // ارفعها في الخلفية
+      _uploadImageInBackground(id, newImage);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      takingPhoto = false;
+      update();
+    }
   }
 
   Future<void> _uploadImageInBackground(int id, File file) async {
