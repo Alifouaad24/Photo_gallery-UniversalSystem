@@ -128,6 +128,8 @@ class CameraGetController extends GetxController {
       final id = await db!.insert('image', {
         'folder_id': currentFolderId,
         'name': newImage.path,
+        'server_id': 0,
+        'server_addedDate': '',
         'isUploaded': 0,
       });
 
@@ -151,13 +153,25 @@ class CameraGetController extends GetxController {
   Future<void> _uploadImageInBackground(int id, File file) async {
     final uploaded = await uploadImages(file);
 
-    if (uploaded) {
+    if (uploaded['success']) {
+      print('Image uploaded successfully: $uploaded');
+      print(uploaded['serverImageId']);
+      print(uploaded['serverImageId'].runtimeType);
+      print(uploaded['insetDateInServer']);
       await db!.update(
         'image',
-        {'isUploaded': 1},
+        {
+          'isUploaded': 1,
+          'server_id': uploaded['serverImageId'],
+          'server_addedDate': uploaded['insetDateInServer'],
+        },
         where: 'id=?',
         whereArgs: [id],
       );
+
+      final realRow = await db!.query('image', where: 'id=?', whereArgs: [id]);
+      print('Real row from DB: $realRow');
+
 
       final index = images.indexWhere((e) => e['id'] == id);
       if (index != -1) {
@@ -169,10 +183,12 @@ class CameraGetController extends GetxController {
 
   // ================= UPLOAD =================
 
-  Future<bool> uploadImages(File file) async {
+  Future<Map<String, dynamic>> uploadImages(File file) async {
     int businessId = storageService.readInt('business_id') ?? 0;
 
-    if (businessId == 0) return false;
+    if (businessId == 0) {
+      return {'success': false, 'serverImageId': null};
+    }
 
     isLoading = true;
     update();
@@ -183,13 +199,22 @@ class CameraGetController extends GetxController {
       currentFolderId!,
     );
 
-    bool success = false;
+    final response = result.fold(
+      (_) => {'success': false, 'serverImageId': null},
+      (data) {
+        print("RAW API DATA: $data");
 
-    result.fold((_) => success = false, (_) => success = true);
+        return {
+          'success': true,
+          'serverImageId': data['remoteImageId'],
+          'insetDateInServer': data['insetDate'],
+        };
+      },
+    );
 
     isLoading = false;
     update();
 
-    return success;
+    return response;
   }
 }

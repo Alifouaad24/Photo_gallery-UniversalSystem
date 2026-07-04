@@ -167,12 +167,12 @@ class GalleryController extends GetxController {
           colorText: Colors.white,
         );
       },
-      (message) {
+      (data) {
         isLoading = false;
         update();
         Get.snackbar(
           'Success',
-          message,
+          data['message'],
           backgroundColor: const Color(0xFF4BB543),
           colorText: Colors.white,
         );

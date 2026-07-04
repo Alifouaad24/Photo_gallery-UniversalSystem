@@ -75,6 +75,124 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                         await controller.deleteSelectedImages();
                       }
                       break;
+                    case 'details':
+                      if (controller.selectedIndexes.length == 1) {
+                        final selectedImage = controller.selectedIndexes.first;
+
+                        Get.dialog(
+                          Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.blue.shade50,
+                                    child: const Icon(
+                                      Icons.image_outlined,
+                                      size: 32,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  const Text(
+                                    'Image Information',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.tag,
+                                          color: Colors.blue,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            selectedImage.serverImageId != null
+                                                ? "${selectedImage.serverImageId}"
+                                                : "Not uploaded yet",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.schedule,
+                                          color: Colors.green,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            selectedImage.insetDateInServer !=
+                                                    null
+                                                ? "${selectedImage.insetDateInServer}"
+                                                : "No date available",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => Get.back(),
+                                      icon: const Icon(Icons.check),
+                                      label: const Text("OK"),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                   }
                 },
                 itemBuilder: (context) => [
@@ -88,17 +206,18 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                       ],
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 'upload',
-                    enabled: controller.selectedIndexes.isNotEmpty,
-                    child: Row(
-                      children: [
-                        Icon(Icons.cloud_upload, size: 20),
-                        SizedBox(width: 8),
-                        Text('Upload Images'),
-                      ],
+                  if (controller.selectedIndexes.length == 1)
+                    PopupMenuItem(
+                      value: 'upload',
+                      enabled: controller.selectedIndexes.isNotEmpty,
+                      child: Row(
+                        children: [
+                          Icon(Icons.cloud_upload, size: 20),
+                          SizedBox(width: 8),
+                          Text('Upload Images'),
+                        ],
+                      ),
                     ),
-                  ),
                   PopupMenuItem(
                     value: 'delete',
                     enabled: controller.selectedIndexes.isNotEmpty,
@@ -110,6 +229,22 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                       ],
                     ),
                   ),
+                  if (controller.selectedIndexes.length == 1 && controller.selectedIndexes.first.isUploaded)
+                    PopupMenuItem(
+                      value: 'details',
+                      enabled: controller.selectedIndexes.isNotEmpty,
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.details,
+                            size: 20,
+                            color: Color.fromARGB(255, 217, 188, 186),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Image details'),
+                        ],
+                      ),
+                    ),
                 ],
               );
             },
@@ -172,6 +307,21 @@ class _SessionPhotosScreenState extends State<SessionPhotosScreen> {
                               Icons.cloud_done_outlined,
                               color: Color.fromARGB(255, 19, 242, 130),
                               size: 26,
+                            ),
+                          ),
+                        if (item.isUploaded)
+                          Positioned(
+                            top: 6,
+                            left: 2,
+                            child: Text(
+                              item.serverImageId != null
+                                  ? '${item.serverImageId}'
+                                  : '',
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 255, 0, 0),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         if (isSelected)

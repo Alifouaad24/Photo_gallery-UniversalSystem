@@ -35,6 +35,8 @@ class DatabaseHelper {
     CREATE TABLE image(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      server_id INTEGER DEFAULT 0,
+      server_addedDate TEXT DEFAULT '',
       folder_id INTEGER NOT NULL,
       isUploaded INTEGER DEFAULT 0,
       business_name TEXT DEFAULT '',

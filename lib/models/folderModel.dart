@@ -26,8 +26,10 @@ class ImageItem {
   String name;
   int folderId;
   bool isUploaded;
+  int? serverImageId;
+  String? insetDateInServer;
 
-  ImageItem({this.id, required this.name, required this.folderId, this.isUploaded = false});
+  ImageItem({this.id, required this.name, required this.folderId, this.isUploaded = false, this.serverImageId, this.insetDateInServer});
 
   Map<String, dynamic> toMap() {
     return {
@@ -35,6 +37,8 @@ class ImageItem {
       'name': name,
       'folder_id': folderId,
       'isUploaded': isUploaded ? 1 : 0,
+      'serverImageId': serverImageId,
+      'insetDateInServer': insetDateInServer,
     };
   }
 
@@ -44,6 +48,8 @@ class ImageItem {
       name: map['name'],
       folderId: map['folder_id'],
       isUploaded: map['isUploaded'] == 1,
+      serverImageId: map['server_id'],
+      insetDateInServer: map['server_addedDate'],
     );
   }
 }

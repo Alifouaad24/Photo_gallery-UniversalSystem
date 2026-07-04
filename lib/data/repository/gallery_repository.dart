@@ -8,7 +8,7 @@ import 'package:photo_gallery/main.dart';
 class GalleryRepository {
   Dio _dio = DioClient().dio;
 
-  Future<Either<String, String>> uploadImages(
+  Future<Either<String, Map<String, dynamic>>> uploadImages(
     List<File> files,
     int businessId,
     int folderId,
@@ -37,9 +37,9 @@ class GalleryRepository {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      return Right(response.data['message']);
+      return Right(response.data);
     } on DioException catch (e) {
-      return Left(e.response?.data?.toString() ?? 'خطأ في رفع الصور');
+      return Left(e.response?.data ?? {'message': 'خطأ في رفع الصور'});
     }
   }
 }
