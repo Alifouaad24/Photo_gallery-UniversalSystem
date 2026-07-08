@@ -182,7 +182,7 @@ class SessionFolderList extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'Folder-${session.id.toString()}',
+                                  'F: ${session.serverId.toString()}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,

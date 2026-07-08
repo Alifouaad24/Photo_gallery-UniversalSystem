@@ -1,3 +1,3 @@
 class AppRelease {
-  static const String ReleaseDate = "2026/07/01";
+  static const String ReleaseDate = "2026/07/08";
 }

@@ -17,6 +17,8 @@ class CameraGetController extends GetxController {
 
   Directory? sessionFolder;
   int? currentFolderId;
+  int? currentLocalFolderId;
+  int? remoteFolderIdCreated;
 
   bool isLoading = false;
   bool cameraReady = false;
@@ -57,7 +59,7 @@ class CameraGetController extends GetxController {
 
   Future<void> startCameraSession() async {
     print(
-      '########################################################currentFolderId: $currentFolderId',
+      '########################################################currentRemoteFolderId: $currentFolderId',
     );
     final dir = await getApplicationDocumentsDirectory();
     final mainFolder = Directory('${dir.path}/ApxGallery');
@@ -69,14 +71,20 @@ class CameraGetController extends GetxController {
     if (currentFolderId != null) {
       sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
     } else {
+      int remoteFolderId = await createRemoteFolder();
+      
+      currentFolderId = remoteFolderId;
       final folderName = DateTime.now()
           .toString()
           .substring(0, 19)
           .replaceAll(' ', '|');
-      currentFolderId = await db!.insert('folder', {
+
+      currentLocalFolderId = await db!.insert('folder', {
         'name': folderName,
         'business_name': storageService.readString('business_Name') ?? '',
+        'serverId': remoteFolderId,
       });
+
       print(currentFolderId);
       print(storageService.readString('business_Name'));
       sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
@@ -97,7 +105,8 @@ class CameraGetController extends GetxController {
     images.clear();
     if (images.isEmpty && sessionFolder != null) {
       await sessionFolder!.delete(recursive: true);
-      await db!.delete('folder', where: 'id=?', whereArgs: [currentFolderId]);
+      await deleteRemoteFolder(remoteFolderIdCreated!);
+      await db!.delete('folder', where: 'id=?', whereArgs: [currentLocalFolderId]);
     }
     update();
   }
@@ -172,7 +181,6 @@ class CameraGetController extends GetxController {
       final realRow = await db!.query('image', where: 'id=?', whereArgs: [id]);
       print('Real row from DB: $realRow');
 
-
       final index = images.indexWhere((e) => e['id'] == id);
       if (index != -1) {
         images[index]['isUploaded'] = 1;
@@ -216,5 +224,33 @@ class CameraGetController extends GetxController {
     update();
 
     return response;
+  }
+
+  Future<int> createRemoteFolder() async {
+    isLoading = true;
+    update();
+    final result = await galleryRepo.createServerFolder();
+    int folderId = result.fold(
+      (error) {
+        print(error);
+        return 0;
+      },
+      (data) {
+        return data['userFolderId'] as int;
+      },
+    );
+    isLoading = false;
+    update();
+
+    return folderId;
+  }
+
+  Future<void> deleteRemoteFolder(int id) async {
+    isLoading = true;
+    update();
+    final result = await galleryRepo.deleteRemoteFolder(id);
+    result.fold((error) {}, (data) {});
+    isLoading = false;
+    update();
   }
 }

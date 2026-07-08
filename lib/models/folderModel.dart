@@ -1,9 +1,10 @@
 class Folder {
   int? id;
   String name;
+  int? serverId;
   String businessName;
 
-  Folder({this.id, required this.name, required this.businessName});
+  Folder({this.id, required this.name, required this.businessName, this.serverId});
 
   Map<String, dynamic> toMap() {
     return {
@@ -16,7 +17,8 @@ class Folder {
     return Folder(
       id: map['id'],
       name: map['name'],
-      businessName : map['business_name']
+      businessName : map['business_name'],
+      serverId: map['serverId']
     );
   }
 }

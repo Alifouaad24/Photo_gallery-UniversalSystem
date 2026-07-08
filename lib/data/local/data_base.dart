@@ -27,6 +27,7 @@ class DatabaseHelper {
     CREATE TABLE folder(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      serverId INTEGER DEFAULT 0,
       business_name TEXT DEFAULT ''
     )
   ''');
