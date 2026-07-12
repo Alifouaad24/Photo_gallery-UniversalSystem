@@ -135,7 +135,7 @@ class CameraGetController extends GetxController {
 
       // احفظها محلياً أولاً
       final id = await db!.insert('image', {
-        'folder_id': currentFolderId,
+        'folder_id': currentLocalFolderId,
         'name': newImage.path,
         'server_id': 0,
         'server_addedDate': '',
