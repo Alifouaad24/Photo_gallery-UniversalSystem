@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
 import 'package:photo_gallery/models/splashResponseModel.dart';
 import 'package:photo_gallery/modules/auth/controllers/AuthController.dart';
+import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 import 'package:photo_gallery/modules/home/controllers/home_controller.dart';
 import 'package:photo_gallery/modules/splash/controllers/splash_controller.dart';
 
@@ -26,8 +27,7 @@ class HomeScreen extends StatelessWidget {
               return const Text("No Business");
             }
 
-            final selected =
-                controller.selectedBusiness ?? businesses.first;
+            final selected = controller.selectedBusiness ?? businesses.first;
 
             return DropdownButtonHideUnderline(
               child: DropdownButton<Business>(
@@ -56,7 +56,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Get.find<AuthController>().logout();
             },
-          )
+          ),
         ],
       ),
       body: GetBuilder<HomeController>(
@@ -71,10 +71,7 @@ class HomeScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xff3F51B5),
-                        Color(0xff5C6BC0),
-                      ],
+                      colors: [Color(0xff3F51B5), Color(0xff5C6BC0)],
                     ),
                   ),
                   child: Column(
@@ -83,25 +80,25 @@ class HomeScreen extends StatelessWidget {
                       Row(
                         children: [
                           const CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person,
-                          color: Color(0xff3F51B5),
-                          size: 25,
-                        ),
-                      ),
+                            radius: 20,
+                            backgroundColor: Colors.white,
+                            child: Icon(
+                              Icons.person,
+                              color: Color(0xff3F51B5),
+                              size: 25,
+                            ),
+                          ),
 
-                      const SizedBox(width: 8),
+                          const SizedBox(width: 8),
 
-                      Text(
-                        controller.userName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                          Text(
+                            controller.userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
 
@@ -109,9 +106,7 @@ class HomeScreen extends StatelessWidget {
 
                       Text(
                         "Release : ${HomeController.releaseDate}",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                        ),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                       const SizedBox(height: 5),
                     ],
@@ -128,14 +123,16 @@ class HomeScreen extends StatelessWidget {
                   mainAxisSpacing: 18,
                   childAspectRatio: .95,
                   children: [
-
                     _menuCard(
                       icon: Icons.camera_alt_rounded,
                       color: Colors.blue,
                       title: "Camera",
                       onTap: () async {
-                        final changed =
-                            await Get.toNamed(Routes.cameraSession);
+                        var cameraController = Get.find<CameraGetController>();
+                        cameraController.AddToItemAndInventory = false;
+                        cameraController.ItemUpc = '';
+                        cameraController.update();
+                        final changed = await Get.toNamed(Routes.cameraSession);
 
                         if (changed == true) {
                           Get.toNamed(Routes.gallery);
@@ -157,7 +154,7 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.orange,
                       title: "Inventory",
                       onTap: () {
-                         Get.toNamed(Routes.showInventory);
+                        Get.toNamed(Routes.showInventory);
                       },
                     ),
 
@@ -195,31 +192,23 @@ class HomeScreen extends StatelessWidget {
               color: Colors.grey.withOpacity(.12),
               blurRadius: 15,
               offset: const Offset(0, 8),
-            )
+            ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
             CircleAvatar(
               radius: 33,
               backgroundColor: color.withOpacity(.12),
-              child: Icon(
-                icon,
-                color: color,
-                size: 34,
-              ),
+              child: Icon(icon, color: color, size: 34),
             ),
 
             const SizedBox(height: 18),
 
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ],
         ),

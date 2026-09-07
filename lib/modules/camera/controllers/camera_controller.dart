@@ -22,7 +22,8 @@ class CameraGetController extends GetxController {
 
   bool isLoading = false;
   bool cameraReady = false;
-
+  bool AddToItemAndInventory = false;
+  String ItemUpc = '';
   List<Map<String, dynamic>> images = [];
 
   @override
@@ -34,6 +35,8 @@ class CameraGetController extends GetxController {
   // ================= CAMERA =================
 
   Future<void> initCamera() async {
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&**************************:::$AddToItemAndInventory');
+
     final cameras = await availableCameras();
     camera = CameraController(
       cameras.first,
@@ -72,7 +75,7 @@ class CameraGetController extends GetxController {
       sessionFolder = Directory('${mainFolder.path}/$currentFolderId');
     } else {
       int remoteFolderId = await createRemoteFolder();
-      
+
       currentFolderId = remoteFolderId;
       final folderName = DateTime.now()
           .toString()
@@ -106,7 +109,11 @@ class CameraGetController extends GetxController {
     if (images.isEmpty && sessionFolder != null) {
       await sessionFolder!.delete(recursive: true);
       await deleteRemoteFolder(remoteFolderIdCreated!);
-      await db!.delete('folder', where: 'id=?', whereArgs: [currentLocalFolderId]);
+      await db!.delete(
+        'folder',
+        where: 'id=?',
+        whereArgs: [currentLocalFolderId],
+      );
     }
     update();
   }
@@ -205,6 +212,8 @@ class CameraGetController extends GetxController {
       [file],
       businessId,
       currentFolderId!,
+      AddToItemAndInventory,
+      ItemUpc
     );
 
     final response = result.fold(

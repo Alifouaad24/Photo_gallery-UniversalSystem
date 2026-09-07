@@ -5,6 +5,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/simple/get_state.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
+import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 import 'package:photo_gallery/modules/inventory/controllers/inventory_controller.dart';
 import 'package:photo_gallery/modules/inventory/views/BarcodeScannerView.dart';
 
@@ -34,13 +35,16 @@ class ShowinventoryView extends StatelessWidget {
           if (controller.inventoryList.isEmpty) {
             return Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment .center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text("No Inventory Found", style: TextStyle(fontSize: 18)),
                   OutlinedButton.icon(
                     onPressed: () async {
+                      var cameraController = Get.find<CameraGetController>();
+                      cameraController.AddToItemAndInventory = true;
+                       cameraController.ItemUpc = '';
+                      cameraController.update();
                       final changed = await Get.toNamed(Routes.cameraSession);
-
                       if (changed == true) {
                         Get.toNamed(Routes.gallery);
                       }
@@ -159,6 +163,12 @@ class ShowinventoryView extends StatelessWidget {
 
                             OutlinedButton.icon(
                               onPressed: () async {
+                                var cameraController =
+                                    Get.find<CameraGetController>();
+                                cameraController.AddToItemAndInventory = true;
+                                cameraController.ItemUpc = '';
+                                cameraController.update();
+
                                 final changed = await Get.toNamed(
                                   Routes.cameraSession,
                                 );
@@ -202,8 +212,7 @@ class ShowinventoryView extends StatelessWidget {
 
 Widget inventoryCard(InventoryModel item) {
   return GetBuilder<InventoryController>(
-    builder: (controller) => 
-     InkWell(
+    builder: (controller) => InkWell(
       onLongPress: () {
         showQtyDialog(
           item,
@@ -255,9 +264,9 @@ Widget inventoryCard(InventoryModel item) {
                   ),
                 ),
               ),
-    
+
               const SizedBox(width: 14),
-    
+
               /// Middle content
               Expanded(
                 child: Column(
@@ -273,31 +282,44 @@ Widget inventoryCard(InventoryModel item) {
                         height: 1.3,
                       ),
                     ),
-    
+
                     const SizedBox(height: 10),
-    
+
                     _infoRow(Icons.qr_code_rounded, item.item?.upc ?? "-"),
                     const SizedBox(height: 6),
                     _infoRow(Icons.memory_rounded, item.item?.model ?? "-"),
                   ],
                 ),
               ),
-    
+
               const SizedBox(width: 5),
-    
+
               /// Qty badge (modern chip)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color.fromARGB(255, 14, 15, 15).withOpacity(0.2)),
+                  border: Border.all(
+                    color: const Color.fromARGB(
+                      255,
+                      14,
+                      15,
+                      15,
+                    ).withOpacity(0.2),
+                  ),
                 ),
                 child: Column(
                   children: [
                     const Text(
                       "Qty",
-                      style: TextStyle(fontSize: 10, color: Color.fromARGB(255, 9, 9, 9)),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color.fromARGB(255, 9, 9, 9),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -335,13 +357,19 @@ Widget _infoRow(IconData icon, String text) {
   );
 }
 
-void showQtyDialog(InventoryModel item, {required Function(int qty) onConfirm}) {
+void showQtyDialog(
+  InventoryModel item, {
+  required Function(int qty) onConfirm,
+}) {
   final TextEditingController qtyController = TextEditingController();
 
   Get.dialog(
     AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text("ادخل الكمية للمنتج ${item.item?.upc ?? ""}", style: TextStyle(fontSize: 16),),
+      title: Text(
+        "ادخل الكمية للمنتج ${item.item?.upc ?? ""}",
+        style: TextStyle(fontSize: 16),
+      ),
       content: TextField(
         controller: qtyController,
         keyboardType: TextInputType.number,
@@ -353,8 +381,7 @@ void showQtyDialog(InventoryModel item, {required Function(int qty) onConfirm}) 
       actions: [
         TextButton(onPressed: () => Get.back(), child: const Text("إلغاء")),
         GetBuilder<InventoryController>(
-          builder: (controller) => 
-          ElevatedButton(
+          builder: (controller) => ElevatedButton(
             onPressed: () {
               final qty = int.tryParse(qtyController.text);
               if (qty == null) {
@@ -363,7 +390,9 @@ void showQtyDialog(InventoryModel item, {required Function(int qty) onConfirm}) 
               }
               onConfirm(qty);
             },
-            child: controller.changeQty ? CircularProgressIndicator() : Text("موافق"),
+            child: controller.changeQty
+                ? CircularProgressIndicator()
+                : Text("موافق"),
           ),
         ),
       ],

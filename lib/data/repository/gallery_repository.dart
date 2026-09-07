@@ -13,6 +13,8 @@ class GalleryRepository {
     List<File> files,
     int businessId,
     int folderId,
+    bool AddToItemAndInventory,
+    String ItemUpc
   ) async {
     try {
       final formData = FormData();
@@ -31,7 +33,8 @@ class GalleryRepository {
 
       formData.fields.add(MapEntry('BusinessId', businessId.toString()));
       formData.fields.add(MapEntry('folderId', folderId.toString()));
-
+      formData.fields.add(MapEntry('AddToItemAndInventory', AddToItemAndInventory.toString()));
+      formData.fields.add(MapEntry('upc', ItemUpc));
       final response = await _dio.post(
         '/ImageUploader',
         data: formData,
