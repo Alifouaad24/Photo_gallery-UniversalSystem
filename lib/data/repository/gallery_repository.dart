@@ -14,7 +14,7 @@ class GalleryRepository {
     int businessId,
     int folderId,
     bool AddToItemAndInventory,
-    String ItemUpc
+    String ItemUpc,
   ) async {
     try {
       final formData = FormData();
@@ -32,9 +32,27 @@ class GalleryRepository {
       }
 
       formData.fields.add(MapEntry('BusinessId', businessId.toString()));
-      formData.fields.add(MapEntry('folderId', folderId.toString()));
-      formData.fields.add(MapEntry('AddToItemAndInventory', AddToItemAndInventory.toString()));
+      formData.fields.add(MapEntry('FolderId', folderId.toString()));
+      formData.fields.add(
+        MapEntry('AddToItemAndInventory', AddToItemAndInventory.toString()),
+      );
       formData.fields.add(MapEntry('upc', ItemUpc));
+      // 🖨️ Print FormData fields
+      print('========== FORM DATA ==========');
+
+      for (final field in formData.fields) {
+        print('${field.key}: ${field.value}');
+      }
+
+      // 🖼️ Print uploaded files
+      print('---------- FILES ----------');
+
+      for (final file in formData.files) {
+        print('Key: ${file.key}');
+        print('Filename: ${file.value.filename}');
+        print('Content-Type: ${file.value.contentType}');
+        print('Length: ${file.value.length}');
+      }
       final response = await _dio.post(
         '/ImageUploader',
         data: formData,
@@ -47,21 +65,27 @@ class GalleryRepository {
     }
   }
 
-  Future<Either<String, Map<String, dynamic>>> createServerFolder(
-  ) async {
-    try {
-      final response = await _dio.post(
-        '/ImageUploader/CreateFolder',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
-
-      return Right(response.data);
-    } on DioException catch (e) {
-      return Left(e.response?.data ?? {'message': 'خطأ في انشاء المجلد'});
-    }
+  Future<Either<String, Map<String, dynamic>>> createServerFolder({
+  required bool addToItemAndInventory,
+  String? upc,
+}) async {
+  try {
+    final response = await _dio.post(
+      '/ImageUploader/CreateFolder',
+      data: {
+        'AddToItemAndInventory': addToItemAndInventory,
+        'Upc': upc,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Right(response.data);
+  } catch (e) {
+    return Left(e.toString());
   }
+}
 
-   Future<Either<String, Map<String, dynamic>>> deleteRemoteFolder(int id
+  Future<Either<String, Map<String, dynamic>>> deleteRemoteFolder(
+    int id,
   ) async {
     try {
       final response = await _dio.delete(

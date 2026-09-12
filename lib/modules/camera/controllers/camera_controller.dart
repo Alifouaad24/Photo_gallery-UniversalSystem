@@ -35,7 +35,9 @@ class CameraGetController extends GetxController {
   // ================= CAMERA =================
 
   Future<void> initCamera() async {
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&**************************:::$AddToItemAndInventory');
+    print(
+      '&&&&&&&&&&&&&&&&&&&&&&&&&&&&**************************:::$AddToItemAndInventory',
+    );
 
     final cameras = await availableCameras();
     camera = CameraController(
@@ -213,7 +215,7 @@ class CameraGetController extends GetxController {
       businessId,
       currentFolderId!,
       AddToItemAndInventory,
-      ItemUpc
+      ItemUpc,
     );
 
     final response = result.fold(
@@ -238,7 +240,12 @@ class CameraGetController extends GetxController {
   Future<int> createRemoteFolder() async {
     isLoading = true;
     update();
-    final result = await galleryRepo.createServerFolder();
+
+    final result = await galleryRepo.createServerFolder(
+      addToItemAndInventory: AddToItemAndInventory,
+      upc: ItemUpc.isNotEmpty ? ItemUpc : null,
+    );
+
     int folderId = result.fold(
       (error) {
         print(error);
@@ -248,6 +255,7 @@ class CameraGetController extends GetxController {
         return data['userFolderId'] as int;
       },
     );
+
     isLoading = false;
     update();
 
