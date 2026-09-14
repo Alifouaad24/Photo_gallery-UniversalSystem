@@ -150,11 +150,19 @@ class HomeScreen extends StatelessWidget {
                     ),
 
                     _menuCard(
-                      icon: Icons.inventory_2_rounded,
-                      color: Colors.orange,
+                      icon: Icons.search,
+                      color: const Color.fromARGB(255, 164, 175, 46),
                       title: "Inventory",
                       onTap: () {
                         Get.toNamed(Routes.showInventory);
+                      },
+                    ),
+                    _menuCard(
+                      icon: Icons.add,
+                      color: Colors.orange,
+                      title: "Inventory",
+                      onTap: () {
+                        Get.toNamed(Routes.addInventory);
                       },
                     ),
 

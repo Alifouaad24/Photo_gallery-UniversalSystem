@@ -8,4 +8,5 @@ class Routes {
   static const String FullScreenImage = '/full-screen-image';
   static const String addItemScreen = '/add-item';
   static const String showInventory = '/showInventory';
+  static const String addInventory = '/addInventory';
 }

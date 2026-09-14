@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
 import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 import 'package:camera/camera.dart';
+import 'package:photo_gallery/modules/camera/views/itemdataDialog.dart';
+import 'package:photo_gallery/modules/inventory/controllers/inventory_controller.dart';
 import 'package:photo_gallery/modules/inventory/views/BarcodeScannerView.dart';
 
 class CameraSessionScreen extends StatefulWidget {
@@ -42,6 +44,22 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
     });
   }
 
+  void _openItemDetailsDialog() {
+    final cameraController = Get.find<CameraGetController>();
+    
+
+    showAddItemDetailsDialog(
+      categories: cameraController.categories,
+      platforms: controller.platforms,
+      conditions: cameraController.conditions,
+      initialValue: controller.newItemDetails,
+      onSave: (result) {
+        controller.newItemDetails = result;
+        controller.update();
+      },
+    );
+  }
+
   @override
   void dispose() {
     controller.endCameraSession();
@@ -58,6 +76,7 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
+        final hasItemDetails = controller.newItemDetails != null;
         return Scaffold(
           body: Stack(
             children: [
@@ -67,50 +86,101 @@ class _CameraSessionScreenState extends State<CameraSessionScreen> {
                   controller.camera!,
                 ),
               ),
-              Positioned(
-                bottom: 40,
-                right: 20,
-                child: IconButton(
-                  color: Colors.white,
-                  iconSize: 40,
-                  icon: const Icon(Icons.qr_code_scanner),
-                  onPressed: () async {
-                    if (controller.camera != null) {
-                      await controller.camera!.dispose();
-                      controller.camera = null;
-                      controller.cameraReady = false;
-                      controller.update();
-                    }
-
-                    final code = await Get.to<String>(
-                      () => const BarcodeScannerView(),
-                    );
-
-                    if (code != null) {
-                      controller.ItemUpc = code;
-                    }
-
-                    // ✅ مهلة زمنية تسمح لنظام الأندرويد يحرر الكاميرا فعلياً
-                    await Future.delayed(const Duration(milliseconds: 500));
-
-                    // ✅ محاولة إعادة فتح الكاميرا مع إعادة محاولة تلقائية لو فشلت أول مرة
-                    bool started = false;
-                    for (int attempt = 0; attempt < 3 && !started; attempt++) {
-                      try {
-                        await controller.initCamera();
-                        started = controller.cameraReady;
-                      } catch (e) {
-                        started = false;
-                      }
-                      if (!started) {
-                        await Future.delayed(const Duration(milliseconds: 400));
-                      }
-                    }
-
-                    controller.update();
-                  },
+              if (controller.AddToItemAndInventory)
+                Positioned(
+                  top: 90,
+                  right: 20,
+                  child: InkWell(
+                    onTap: _openItemDetailsDialog,
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: hasItemDetails
+                            ? const Color(0xFF1CA97C)
+                            : Colors.black54,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            hasItemDetails
+                                ? Icons.check_circle_rounded
+                                : Icons.inventory_2_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            hasItemDetails
+                                ? "تم تعبئة البيانات"
+                                : "بيانات المنتج",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              if (controller.AddToItemAndInventory)
+                Positioned(
+                  bottom: 40,
+                  right: 20,
+                  child: IconButton(
+                    color: Colors.white,
+                    iconSize: 40,
+                    icon: const Icon(Icons.qr_code_scanner),
+                    onPressed: () async {
+                      if (controller.camera != null) {
+                        await controller.camera!.dispose();
+                        controller.camera = null;
+                        controller.cameraReady = false;
+                        controller.update();
+                      }
+
+                      final code = await Get.to<String>(
+                        () => const BarcodeScannerView(),
+                      );
+
+                      if (code != null) {
+                        controller.ItemUpc = code;
+                      }
+
+                      // ✅ مهلة زمنية تسمح لنظام الأندرويد يحرر الكاميرا فعلياً
+                      await Future.delayed(const Duration(milliseconds: 500));
+
+                      // ✅ محاولة إعادة فتح الكاميرا مع إعادة محاولة تلقائية لو فشلت أول مرة
+                      bool started = false;
+                      for (
+                        int attempt = 0;
+                        attempt < 3 && !started;
+                        attempt++
+                      ) {
+                        try {
+                          await controller.initCamera();
+                          started = controller.cameraReady;
+                        } catch (e) {
+                          started = false;
+                        }
+                        if (!started) {
+                          await Future.delayed(
+                            const Duration(milliseconds: 400),
+                          );
+                        }
+                      }
+
+                      controller.update();
+                    },
+                  ),
+                ),
 
               Positioned(
                 top: 40,

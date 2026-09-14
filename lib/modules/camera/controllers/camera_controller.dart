@@ -6,6 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/data/local/data_base.dart';
 import 'package:photo_gallery/data/repository/gallery_repository.dart';
+import 'package:photo_gallery/data/repository/inventory_repository.dart';
+import 'package:photo_gallery/models/inventoryModel.dart';
+import 'package:photo_gallery/modules/camera/views/itemdataDialog.dart';
 import 'package:sqflite/sqflite.dart';
 
 class CameraGetController extends GetxController {
@@ -19,17 +22,25 @@ class CameraGetController extends GetxController {
   int? currentFolderId;
   int? currentLocalFolderId;
   int? remoteFolderIdCreated;
+  final StorageLocalService _storageService = Get.find<StorageLocalService>();
 
   bool isLoading = false;
   bool cameraReady = false;
   bool AddToItemAndInventory = false;
   String ItemUpc = '';
   List<Map<String, dynamic>> images = [];
+  NewItemDetailsResult? newItemDetails;
 
   @override
   void onInit() async {
     super.onInit();
     db = await DatabaseHelper().database;
+    var businessId = _storageService.readInt('business_id');
+    if (businessId != null) {
+      getConditions();
+      getCategories(businessId);
+      getPlatforms(businessId);
+    }
   }
 
   // ================= CAMERA =================
@@ -107,6 +118,7 @@ class CameraGetController extends GetxController {
     await disposeCamera();
     sessionFolder = null;
     currentFolderId = null;
+    newItemDetails = null;
     images.clear();
     if (images.isEmpty && sessionFolder != null) {
       await sessionFolder!.delete(recursive: true);
@@ -216,6 +228,7 @@ class CameraGetController extends GetxController {
       currentFolderId!,
       AddToItemAndInventory,
       ItemUpc,
+      itemDetails: newItemDetails,
     );
 
     final response = result.fold(
@@ -267,6 +280,72 @@ class CameraGetController extends GetxController {
     update();
     final result = await galleryRepo.deleteRemoteFolder(id);
     result.fold((error) {}, (data) {});
+    isLoading = false;
+    update();
+  }
+
+  String? errorMessage;
+  final inventoryRepo = InventoryRepository();
+  List<CategoryModel> categories = [];
+  List<PlatformModel> platforms = [];
+  List<ItemConditionModel> conditions = [];
+
+  Future<void> getConditions() async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllConditions();
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        conditions = data;
+      },
+    );
+
+    isLoading = false;
+    update();
+  }
+
+  Future<void> getCategories(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllCategories(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        categories = data;
+      },
+    );
+
+    isLoading = false;
+    update();
+  }
+
+   Future<void> getPlatforms(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllPlatforms(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        platforms = data;
+      },
+    );
+
     isLoading = false;
     update();
   }

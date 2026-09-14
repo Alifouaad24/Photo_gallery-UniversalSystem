@@ -42,7 +42,18 @@ class InventoryModel {
 
   final String? marketPlaceOfferUrl;
 
-  
+  bool get isBiometricComplete {
+    final categoryOk = (item?.category?.name ?? '').trim().isNotEmpty;
+
+    final descriptionOk = (item?.description ?? '').trim().isNotEmpty;
+
+    final detailsOk = (item?.itemDetails ?? '').trim().isNotEmpty;
+
+    final priceOk = item?.basePrice != null;
+
+    return categoryOk && descriptionOk && detailsOk && priceOk;
+  }
+
   InventoryModel copyWith({int? qty}) {
     return InventoryModel(
       inventoryId: inventoryId,
@@ -101,7 +112,7 @@ class InventoryModel {
       notes: json['notes'],
       sitePrice: json['sitePrice'],
       folderImages: json['folderImages'],
-      qty: json['qty'],
+      qty: json['qtyPublished'],
       internetId: json['internetId'],
       productDescription: json['product_description'],
       platform: json['platform'] == null
@@ -210,53 +221,161 @@ class ItemImageModel {
 
 class ItemModel {
   final int? itemId;
-  final String? description;
+
+  final String? itemDescription;
   final String? itemDetails;
+
   final String? sku;
+  final String? internetId;
   final String? upc;
+  final String? shortCode;
   final String? model;
-  final String? brand;
+
+  // Platform
+  final int? platformId;
+  final PlatformModel? platform;
+
+  // Dimensions
   final double? height;
   final double? width;
   final double? length;
-  final double? basePrice;
+
+  // Unit
+
+
+
+
+
+
+  // General
+  final String? description;
+  final double? weight;
   final String? internet;
 
+
+
+  // Category
+  final int? categoryId;
+  final CategoryModel? category;
+
+  // Price / Currency
+  final double? basePrice;
+
+
+  // Status
+  final bool? isActive;
+  final bool? isScraped;
+  final bool? isComplated;
+  final bool? canScrape;
+
+  // Images / Business
   final List<ItemImageModel> images;
+
+  final String? insertBy;
+
+  // Car information
+  final String? vinNumber;
+
+
+  // Customer
+  final int? globalCustomerId;
 
   ItemModel({
     this.itemId,
-    this.description,
+    this.itemDescription,
     this.itemDetails,
     this.sku,
+    this.internetId,
     this.upc,
+    this.shortCode,
     this.model,
-    this.brand,
+    this.platformId,
+    this.platform,
     this.height,
     this.width,
     this.length,
-    this.basePrice,
+
+    this.description,
+    this.weight,
     this.internet,
+    this.categoryId,
+    this.category,
+    this.basePrice,
+    this.isActive,
+    this.isScraped,
+    this.isComplated,
+    this.canScrape,
     required this.images,
+    this.insertBy,
+    this.vinNumber,
+
+    this.globalCustomerId,
   });
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
       itemId: json['itemId'],
-      description: json['description'],
+
+      itemDescription: json['itemDescription'],
       itemDetails: json['itemDetails'],
+
       sku: json['sku'],
+      internetId: json['internetId'],
       upc: json['upc'],
+      shortCode: json['shortCode'],
       model: json['model'],
-      brand: json['brand'],
+
+      // Platform
+      platformId: json['platformId'],
+      platform: json['platform'] != null
+          ? PlatformModel.fromJson(Map<String, dynamic>.from(json['platform']))
+          : null,
+
+      // Dimensions
       height: (json['height'] as num?)?.toDouble(),
       width: (json['width'] as num?)?.toDouble(),
       length: (json['length'] as num?)?.toDouble(),
-      basePrice: (json['basePrice'] as num?)?.toDouble(),
+
+
+
+      // General
+      description: json['description'],
+      weight: (json['weight'] as num?)?.toDouble(),
       internet: json['internet'],
+
+
+
+      // Category
+      categoryId: json['categoryId'],
+      category: json['category'] != null
+          ? CategoryModel.fromJson(Map<String, dynamic>.from(json['category']))
+          : null,
+
+      // Price / Currency
+      basePrice: (json['basePrice'] as num?)?.toDouble(),
+
+      // Status
+      isActive: json['isActive'],
+      isScraped: json['isScraped'],
+      isComplated: json['isComplated'],
+      canScrape: json['canScrape'],
+
+      // Images
       images: (json['images'] as List<dynamic>? ?? [])
-          .map((e) => ItemImageModel.fromJson(e))
+          .map((e) => ItemImageModel.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
+
+      // Business Items
+
+      insertBy: json['insertBy'],
+
+      // Car
+      vinNumber: json['vinNumber'],
+
+
+      // Customer
+      // Customer نفسه [JsonIgnore] لذلك لن يأتي في JSON
+      globalCustomerId: json['globalCustomerId'],
     );
   }
 }
