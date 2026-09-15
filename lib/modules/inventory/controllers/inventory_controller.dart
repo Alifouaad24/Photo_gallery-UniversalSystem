@@ -32,6 +32,7 @@ class InventoryController extends GetxController {
   int? currentFolderId;
   Directory? sessionFolder;
   String ItemUpc = '';
+  bool showJustForAdd = true;
   int? currentLocalFolderId;
   Database? db;
   List<Map<String, dynamic>> images = [];
@@ -633,6 +634,9 @@ class InventoryController extends GetxController {
       },
       (data) {
         searchResult = data['msg']?.toString() ?? '';
+        if(searchResult.contains('item already exist in item')){
+          showJustForAdd = false;
+        }
 
         final itemId = data['itemId'];
         final inventoryId = data['inventoryId'];

@@ -474,109 +474,109 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
                   onSearchTap: _searchForItem,
                   onChanged: _applyBarcode,
                 ),
-
-                const SizedBox(height: 5),
-
-                /// -------- خط واصل: بيتلون أخضر لو الخطوة اللي قبله خلصت --------
-                _StepConnector(active: _hasBarcode),
+                if (cameraController.showJustForAdd) const SizedBox(height: 5),
+                if (cameraController.showJustForAdd)
+                  /// --if (cameraController.showJustForAdd)------ خط واصل: بيتلون أخضر لو الخطوة اللي قبله خلصت --------
+                  _StepConnector(active: _hasBarcode),
 
                 const SizedBox(height: 5),
 
                 /// -------- الخطوة 2: بيانات المنتج (نُقلت من شاشة الكاميرا) --------
-                _StepCard(
-                  stepNumber: 2,
-                  title: "بيانات المنتج",
-                  subtitle: cameraController.newItemDetails != null
-                      ? "تم تعبئة البيانات، اضغط للتعديل"
-                      : "الفئة، الحالة، المنصة وتفاصيل تانية (اختياري)",
-                  icon: Icons.inventory_2_outlined,
-                  onTap: _openItemDetailsDialog,
-                  isDone: cameraController.newItemDetails != null,
-                ),
-
-                const SizedBox(height: 12),
-
-                /// -------- خط واصل --------
-                _StepConnector(active: cameraController.newItemDetails != null),
-
-                const SizedBox(height: 5),
-
-                /// -------- الخطوة 3: تصوير المنتج --------
-                _StepCard(
-                  stepNumber: 3,
-                  title: "صوّر المنتج",
-                  subtitle: _hasCapturedImages
-                      ? "${cameraController.images.length} صورة جاهزة — اضغط لإضافة المزيد"
-                      : (_hasBarcode
-                            ? "اضغط لفتح الكاميرا وتصوير المنتج"
-                            : "امسح الباركود أولًا لتفعيل هذه الخطوة"),
-                  icon: Icons.camera_alt_rounded,
-                  onTap: _openCamera,
-                  enabled: _hasBarcode,
-                  isDone: _hasCapturedImages,
-                ),
-
-                /// -------- معرض الصور الملتقطة --------
-                if (_hasCapturedImages) ...[
-                  const SizedBox(height: 16),
-                  _CapturedPhotosGallery(
-                    images: cameraController.images,
-                    onAddMore: _openCamera,
-                    onRemove: _removePhoto,
+                if (cameraController.showJustForAdd)
+                  _StepCard(
+                    stepNumber: 2,
+                    title: "بيانات المنتج",
+                    subtitle: cameraController.newItemDetails != null
+                        ? "تم تعبئة البيانات، اضغط للتعديل"
+                        : "الفئة، الحالة، المنصة وتفاصيل تانية (اختياري)",
+                    icon: Icons.inventory_2_outlined,
+                    onTap: _openItemDetailsDialog,
+                    isDone: cameraController.newItemDetails != null,
                   ),
-                ],
-
-                /// -------- زرار حفظ المنتج: بيظهر بس بعد ما يتلقط صورة واحدة على الأقل --------
-                if (_hasCapturedImages) ...[
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveProduct,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _Palette.primary,
-                        disabledBackgroundColor: _Palette.primary.withOpacity(
-                          0.6,
-                        ),
-                        elevation: 0,
-                        shadowColor: _Palette.primary.withOpacity(0.35),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.cloud_upload_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  "حفظ المنتج",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15.5,
-                                    letterSpacing: -0.2,
-                                  ),
-                                ),
-                              ],
-                            ),
+                if (cameraController.showJustForAdd) const SizedBox(height: 12),
+                if (cameraController.showJustForAdd)
+                  /// -------- خط واصل --------
+                  _StepConnector(
+                    active: cameraController.newItemDetails != null,
+                  ),
+                if (cameraController.showJustForAdd) const SizedBox(height: 5),
+                if (cameraController.showJustForAdd)
+                  /// -------- الخطوة 3: تصوير المنتج --------
+                  _StepCard(
+                    stepNumber: 3,
+                    title: "صوّر المنتج",
+                    subtitle: _hasCapturedImages
+                        ? "${cameraController.images.length} صورة جاهزة — اضغط لإضافة المزيد"
+                        : (_hasBarcode
+                              ? "اضغط لفتح الكاميرا وتصوير المنتج"
+                              : "امسح الباركود أولًا لتفعيل هذه الخطوة"),
+                    icon: Icons.camera_alt_rounded,
+                    onTap: _openCamera,
+                    enabled: _hasBarcode,
+                    isDone: _hasCapturedImages,
+                  ),
+                if (cameraController.showJustForAdd)
+                  /// -------- معرض الصور الملتقطة --------
+                  if (_hasCapturedImages) ...[
+                    const SizedBox(height: 16),
+                    _CapturedPhotosGallery(
+                      images: cameraController.images,
+                      onAddMore: _openCamera,
+                      onRemove: _removePhoto,
                     ),
-                  ),
-                ],
+                  ],
+                if (cameraController.showJustForAdd)
+                  /// -------- زرار حفظ المنتج: بيظهر بس بعد ما يتلقط صورة واحدة على الأقل --------
+                  if (_hasCapturedImages) ...[
+                    const SizedBox(height: 22),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _saveProduct,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _Palette.primary,
+                          disabledBackgroundColor: _Palette.primary.withOpacity(
+                            0.6,
+                          ),
+                          elevation: 0,
+                          shadowColor: _Palette.primary.withOpacity(0.35),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_upload_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "حفظ المنتج",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15.5,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
 
                 if (_isPreparing) ...[
                   const SizedBox(height: 24),
@@ -786,6 +786,10 @@ class _BarcodeInputCard extends StatelessWidget {
                               color: _Palette.inkMuted,
                             ),
                             onPressed: () {
+                              var invController =
+                                  Get.find<InventoryController>();
+                              invController.showJustForAdd = true;
+                              invController.update();
                               controller.clear();
                               onChanged('');
                             },
