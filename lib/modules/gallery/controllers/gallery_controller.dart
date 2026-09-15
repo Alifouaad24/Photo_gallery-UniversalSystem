@@ -155,7 +155,7 @@ class GalleryController extends GetxController {
     }
     isLoading = true;
     update();
-    final result = await galleryRepo.uploadImages(files, businessId, folderId!, false, '');
+    final result = await galleryRepo.uploadImages(files, businessId, folderId!, false, '', null,);
     result.fold(
       (error) {
         isLoading = false;

@@ -70,7 +70,8 @@ class GalleryRepository {
   int businessId,
   int folderId,
   bool AddToItemAndInventory,
-  String ItemUpc, {
+  String ItemUpc,
+  int? itemId, {
   NewItemDetailsResult? itemDetails, // <-- جديد
 }) async {
   try {
@@ -90,6 +91,7 @@ class GalleryRepository {
 
     formData.fields.add(MapEntry('BusinessId', businessId.toString()));
     formData.fields.add(MapEntry('FolderId', folderId.toString()));
+    formData.fields.add(MapEntry('ItemId', itemId.toString()));
     formData.fields.add(
       MapEntry('AddToItemAndInventory', AddToItemAndInventory.toString()),
     );

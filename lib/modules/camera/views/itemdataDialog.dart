@@ -5,21 +5,23 @@ import 'package:photo_gallery/models/inventoryModel.dart';
 /// البيانات اللي ترجع بعد تعبئة بيانات المنتج الجديد
 class NewItemDetailsResult {
   final CategoryModel? category;
-  final PlatformModel? platform; // <-- جديد
+  final PlatformModel? platform;
   final ItemConditionModel? condition;
   final String description;
   final String details;
   final double? itemPrice;
   final double? warehousePrice;
+  final int? qty; // <-- جديد
 
   NewItemDetailsResult({
     required this.category,
-    required this.platform, // <-- جديد
+    required this.platform,
     required this.condition,
     required this.description,
     required this.details,
     required this.itemPrice,
     required this.warehousePrice,
+    required this.qty, // <-- جديد
   });
 }
 
@@ -47,14 +49,14 @@ void showAddItemDetailsDialog({
 
 class _AddItemDetailsDialog extends StatefulWidget {
   final List<CategoryModel> categories;
-  final List<PlatformModel> platforms; // <-- جديد
+  final List<PlatformModel> platforms;
   final List<ItemConditionModel> conditions;
   final NewItemDetailsResult? initialValue;
   final void Function(NewItemDetailsResult result) onSave;
 
   const _AddItemDetailsDialog({
     required this.categories,
-    required this.platforms, // <-- جديد
+    required this.platforms,
     required this.conditions,
     required this.initialValue,
     required this.onSave,
@@ -71,6 +73,7 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
   late TextEditingController _detailsController;
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
+  late TextEditingController _qtyController; // <-- جديد
 
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
@@ -91,6 +94,9 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     _warehousePriceController = TextEditingController(
       text: initial?.warehousePrice?.toString() ?? "",
     );
+    _qtyController = TextEditingController(
+      text: initial?.qty?.toString() ?? "",
+    ); // <-- جديد
 
     _selectedCategory = initial?.category;
     _selectedCondition = initial?.condition;
@@ -103,25 +109,27 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     _detailsController.dispose();
     _itemPriceController.dispose();
     _warehousePriceController.dispose();
+    _qtyController.dispose(); // <-- جديد
     super.dispose();
   }
 
   void _handleSave() {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  final result = NewItemDetailsResult(
-    category: _selectedCategory,
-    platform: _selectedPlatform, // <-- جديد
-    condition: _selectedCondition,
-    description: _descriptionController.text.trim(),
-    details: _detailsController.text.trim(),
-    itemPrice: double.tryParse(_itemPriceController.text.trim()),
-    warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
-  );
+    final result = NewItemDetailsResult(
+      category: _selectedCategory,
+      platform: _selectedPlatform,
+      condition: _selectedCondition,
+      description: _descriptionController.text.trim(),
+      details: _detailsController.text.trim(),
+      itemPrice: double.tryParse(_itemPriceController.text.trim()),
+      warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
+      qty: int.tryParse(_qtyController.text.trim()), // <-- جديد
+    );
 
-  widget.onSave(result);
-  Get.back();
-}
+    widget.onSave(result);
+    Get.back();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,37 +212,38 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
                         ),
 
                         const SizedBox(height: 16),
-                        const SizedBox(height: 16),
 
-/// -------- Platform dropdown --------
-_fieldLabel("المنصة (Platform)"),
-DropdownButtonFormField<PlatformModel>(
-  initialValue: _selectedPlatform,
-  isExpanded: true,
-  decoration: _inputDecoration(
-    hint: "اختر المنصة",
-    icon: Icons.storefront_outlined,
-  ),
-  items: widget.platforms
-      .map(
-        (p) => DropdownMenuItem(
-          value: p,
-          child: Text(p.description ?? "-"),
-        ),
-      )
-      .toList(),
-  onChanged: widget.platforms.isEmpty
-      ? null
-      : (value) {
-          setState(() => _selectedPlatform = value);
-        },
-  hint: widget.platforms.isEmpty
-      ? const Text(
-          "سيتم تحميل المنصات من الـ API",
-          style: TextStyle(fontSize: 12),
-        )
-      : null,
-),
+                        /// -------- Platform dropdown --------
+                        _fieldLabel("المنصة (Platform)"),
+                        DropdownButtonFormField<PlatformModel>(
+                          initialValue: _selectedPlatform,
+                          isExpanded: true,
+                          decoration: _inputDecoration(
+                            hint: "اختر المنصة",
+                            icon: Icons.storefront_outlined,
+                          ),
+                          items: widget.platforms
+                              .map(
+                                (p) => DropdownMenuItem(
+                                  value: p,
+                                  child: Text(p.description ?? "-"),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: widget.platforms.isEmpty
+                              ? null
+                              : (value) {
+                                  setState(() => _selectedPlatform = value);
+                                },
+                          hint: widget.platforms.isEmpty
+                              ? const Text(
+                                  "سيتم تحميل المنصات من الـ API",
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              : null,
+                        ),
+
+                        const SizedBox(height: 16),
 
                         /// -------- Condition dropdown --------
                         _fieldLabel("الحالة (Condition)"),
@@ -279,10 +288,10 @@ DropdownButtonFormField<PlatformModel>(
                             hint: "اكتب وصف المنتج",
                             icon: Icons.description_outlined,
                           ),
-                          validator: (value) => (value == null ||
-                                  value.trim().isEmpty)
-                              ? "أدخل الوصف"
-                              : null,
+                          validator: (value) =>
+                              (value == null || value.trim().isEmpty)
+                                  ? "أدخل الوصف"
+                                  : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -296,10 +305,32 @@ DropdownButtonFormField<PlatformModel>(
                             hint: "اكتب تفاصيل إضافية",
                             icon: Icons.list_alt_rounded,
                           ),
-                          validator: (value) => (value == null ||
-                                  value.trim().isEmpty)
-                              ? "أدخل التفاصيل"
-                              : null,
+                          validator: (value) =>
+                              (value == null || value.trim().isEmpty)
+                                  ? "أدخل التفاصيل"
+                                  : null,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        /// -------- Quantity --------
+                        _fieldLabel("الكمية"),
+                        TextFormField(
+                          controller: _qtyController,
+                          keyboardType: TextInputType.number,
+                          decoration: _inputDecoration(
+                            hint: "0",
+                            icon: Icons.numbers_rounded,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "أدخل الكمية";
+                            }
+                            if (int.tryParse(value.trim()) == null) {
+                              return "رقم غير صحيح";
+                            }
+                            return null;
+                          },
                         ),
 
                         const SizedBox(height: 16),

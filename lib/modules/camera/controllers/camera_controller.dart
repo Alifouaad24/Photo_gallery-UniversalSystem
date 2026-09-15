@@ -228,6 +228,7 @@ class CameraGetController extends GetxController {
       currentFolderId!,
       AddToItemAndInventory,
       ItemUpc,
+      null,
       itemDetails: newItemDetails,
     );
 

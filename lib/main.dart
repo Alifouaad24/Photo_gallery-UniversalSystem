@@ -27,7 +27,7 @@ void main() async {
   await PermissionService.requestCameraAndStorage();
   Get.put(DioClient());
   Get.put(CameraGetController());
-  await backgroundUploader.init();
+  // await backgroundUploader.init();
   runApp(const MyApp());
 }
 

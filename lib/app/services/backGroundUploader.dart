@@ -65,7 +65,8 @@ class BackgroundUploaderService {
 					businessId,
 					folderId,
           false,
-          ''
+          '',
+          null
 				);
 
 				final success = result.fold((_) => false, (_) => true);
