@@ -56,6 +56,7 @@ class InventoryController extends GetxController {
       getInventory(businessId);
       getConditions();
       getCategories(businessId);
+      getPlatforms(businessId);
     }
   }
 
@@ -541,6 +542,20 @@ class InventoryController extends GetxController {
     final details = newItemDetails;
     final businessId = _storageService.readInt('business_id');
 
+    print('========== updateItemInServer ==========');
+    print('itemId: $itemId');
+    print('itemDescription: ${details?.description}');
+    print('itemDetails: ${details?.details}');
+    print('upc: ${ItemUpc.isNotEmpty ? ItemUpc : null}');
+    print('businessId: $businessId');
+    print('categoryId: ${details?.category?.categoryId}');
+    print('platformId: ${details?.platform?.platformId}');
+    print('basePrice: ${details?.itemPrice ?? 0}');
+    print('itemConditionId: ${details?.condition?.itemConditionId}');
+    print('invPrice: ${details?.warehousePrice?.toString()}');
+    print('qty: ${details?.qty}');
+    print('========================================');
+
     final result = await inventoryRepo.updateItemInServer(
       itemId: itemId,
       itemDescription: details?.description,
@@ -634,7 +649,7 @@ class InventoryController extends GetxController {
       },
       (data) {
         searchResult = data['msg']?.toString() ?? '';
-        if(searchResult.contains('item already exist in item')){
+        if (searchResult.contains('item already exist in item')) {
           showJustForAdd = false;
         }
 
@@ -691,5 +706,25 @@ class InventoryController extends GetxController {
     update();
 
     return success;
+  }
+
+  Future<void> getPlatforms(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllPlatforms(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        platforms = data;
+      },
+    );
+
+    isLoading = false;
+    update();
   }
 }

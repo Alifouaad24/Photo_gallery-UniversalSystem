@@ -85,8 +85,9 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
 
     final initial = widget.initialValue;
 
-    _descriptionController =
-        TextEditingController(text: initial?.description ?? "");
+    _descriptionController = TextEditingController(
+      text: initial?.description ?? "",
+    );
     _detailsController = TextEditingController(text: initial?.details ?? "");
     _itemPriceController = TextEditingController(
       text: initial?.itemPrice?.toString() ?? "",
@@ -114,8 +115,6 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
   }
 
   void _handleSave() {
-    if (!_formKey.currentState!.validate()) return;
-
     final result = NewItemDetailsResult(
       category: _selectedCategory,
       platform: _selectedPlatform,
@@ -124,8 +123,19 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
       details: _detailsController.text.trim(),
       itemPrice: double.tryParse(_itemPriceController.text.trim()),
       warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
-      qty: int.tryParse(_qtyController.text.trim()), // <-- جديد
+      qty: int.tryParse(_qtyController.text.trim()),
     );
+
+    print('========== New Item Details ==========');
+    print('Category: ${result.category}');
+    print('Platform: ${result.platform}');
+    print('Condition: ${result.condition}');
+    print('Description: ${result.description}');
+    print('Details: ${result.details}');
+    print('Item Price: ${result.itemPrice}');
+    print('Warehouse Price: ${result.warehousePrice}');
+    print('Qty: ${result.qty}');
+    print('=======================================');
 
     widget.onSave(result);
     Get.back();
@@ -290,8 +300,8 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
                           ),
                           validator: (value) =>
                               (value == null || value.trim().isEmpty)
-                                  ? "أدخل الوصف"
-                                  : null,
+                              ? "أدخل الوصف"
+                              : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -307,8 +317,8 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
                           ),
                           validator: (value) =>
                               (value == null || value.trim().isEmpty)
-                                  ? "أدخل التفاصيل"
-                                  : null,
+                              ? "أدخل التفاصيل"
+                              : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -340,16 +350,15 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
                           children: [
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _fieldLabel("سعر الايتم"),
                                   TextFormField(
                                     controller: _itemPriceController,
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                          decimal: true,
+                                        ),
                                     decoration: _inputDecoration(
                                       hint: "0.00",
                                       icon: Icons.sell_outlined,
@@ -372,16 +381,15 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _fieldLabel("سعر المخزن"),
                                   TextFormField(
                                     controller: _warehousePriceController,
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                          decimal: true,
+                                        ),
                                     decoration: _inputDecoration(
                                       hint: "0.00",
                                       icon: Icons.warehouse_outlined,
@@ -463,8 +471,7 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
       hintText: hint,
       prefixIcon: Icon(icon, size: 20),
       isDense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.grey.shade300),
