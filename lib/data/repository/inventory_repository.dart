@@ -14,7 +14,7 @@ class InventoryRepository {
   ) async {
     try {
       final response = await _dio.get(
-        '/Inventory/${businessId}',
+        '/Inventory/GetAllForImagerApp/${businessId}',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -143,6 +143,7 @@ class InventoryRepository {
     double? itemPrice,
     double? warehousePrice,
     List<String>? imageUrls,
+    int? qty
   }) async {
     try {
       final body = {
@@ -150,6 +151,7 @@ class InventoryRepository {
         if (itemConditionId != null) 'itemConditionId': itemConditionId,
         if (description != null) 'description': description,
         if (details != null) 'details': details,
+        if(qty != null) 'qty' : qty,
         if (itemPrice != null) 'itemPrice': itemPrice,
         if (warehousePrice != null) 'warehousePrice': warehousePrice,
         if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
@@ -157,7 +159,7 @@ class InventoryRepository {
 
       // TODO: عدّل المسار حسب الـ base URL والـ endpoint الفعلي عندك
       final response = await _dio.put(
-        '/api/inventory/$inventoryId',
+        '/inventory/$inventoryId',
         data: body,
       );
 

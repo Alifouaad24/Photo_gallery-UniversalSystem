@@ -271,8 +271,6 @@ class _SimpleInventoryCard extends StatelessWidget {
     final hasUpc = (item.upc ?? item.item?.upc ?? "").isNotEmpty;
     final isBio = item.isBiometricComplete == true;
 
-    // ⚠️ افتراض: اسم الحقل isScraped مش متأكد منه 100% — عدّله لو مختلف
-    // عندك في الموديل الحقيقي.
     final isScraped = item.item?.isScraped == true;
 
     final qty = item.qty ?? 0;

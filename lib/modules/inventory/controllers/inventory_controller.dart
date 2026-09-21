@@ -231,6 +231,7 @@ class InventoryController extends GetxController {
       itemPrice: result.itemPrice,
       warehousePrice: result.warehousePrice,
       imageUrls: uploadedImageUrls,
+      qty: result.qty
     );
 
     apiResult.fold(
@@ -532,7 +533,7 @@ class InventoryController extends GetxController {
     final uploadedOk = await uploadPendingImages();
     if (!uploadedOk) return false;
 
-    final itemId = currentFolderId;
+    final itemId = currentItemId;
     if (itemId == null) {
       errorMessage = "معرف العنصر غير موجود، جرّب  مرة اخرى";
       update();

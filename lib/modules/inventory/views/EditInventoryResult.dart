@@ -15,6 +15,7 @@ class EditInventoryResult {
   final double? itemPrice; // سعر الايتم
   final double? warehousePrice; // سعر المخزن
   final List<File> newImages;
+  final int? qty;
 
   EditInventoryResult({
     required this.category,
@@ -24,6 +25,7 @@ class EditInventoryResult {
     required this.itemPrice,
     required this.warehousePrice,
     required this.newImages,
+    this.qty
   });
 }
 
@@ -70,6 +72,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
   late TextEditingController _detailsController;
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
+   late TextEditingController _qtyController;
 
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
@@ -93,7 +96,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       text: item.sitePrice ?? item.item?.basePrice?.toString() ?? "",
     );
     _warehousePriceController = TextEditingController();
-
+    _qtyController  = TextEditingController();
     final currentCategoryId =
         item.category?.categoryId ??
         item.categoryId ??
@@ -121,6 +124,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
     _descriptionController.dispose();
     _detailsController.dispose();
     _itemPriceController.dispose();
+    _qtyController.dispose();
     _warehousePriceController.dispose();
     super.dispose();
   }
@@ -137,6 +141,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
         });
       }
     } catch (e) {
+      print(e);
       Get.snackbar("خطأ", "تعذر فتح الكاميرا");
     }
   }
@@ -161,6 +166,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       itemPrice: double.tryParse(_itemPriceController.text.trim()),
       warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
       newImages: _newImages,
+      qty: int.parse(_qtyController.text.trim())
     );
 
     // ملاحظة: الترتيب (رفع الصور ثم بناء JSON وتحديث العنصر) يصير جوا
@@ -352,6 +358,20 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                             ),
                           ],
                         ),
+
+                        _fieldLabel("الكمية"),
+                                  TextFormField(
+                                    controller: _qtyController,
+                                    enabled: !_isSaving,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    decoration: _inputDecoration(
+                                      hint: "0",
+                                      icon: Icons.production_quantity_limits,
+                                    ),
+                                  ),
 
                         const SizedBox(height: 18),
 
