@@ -176,9 +176,16 @@ class ShowinventoryView extends StatelessWidget {
                       ),
                     ),
                   ],
+            
                 ),
+                
               ),
-
+controller.inventoryList.length > 0
+                        ? Text(
+                            "Count: ${controller.inventoryList.length}",
+                            style: TextStyle(fontSize: 18),
+                          )
+                        : SizedBox.shrink(),
               /// -------- القائمة --------
               Expanded(
                 child: items.isEmpty
