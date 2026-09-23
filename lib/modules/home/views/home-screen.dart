@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/models/splashResponseModel.dart';
 import 'package:photo_gallery/modules/auth/controllers/AuthController.dart';
 import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
@@ -166,6 +167,19 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
 
+                    _menuCard(
+                      icon: Icons.production_quantity_limits,
+                      color: const Color.fromARGB(255, 161, 40, 139),
+                      title: "Products",
+                      onTap: () {
+                        final StorageLocalService _storageService = Get.find<StorageLocalService>();
+                        var businessId = _storageService.readInt('business_id');
+                        Get.toNamed(
+                          Routes.showItems,
+                          arguments: {'businessId': businessId},
+                        );
+                      },
+                    ),
                     _menuCard(
                       icon: Icons.settings_rounded,
                       color: Colors.deepPurple,

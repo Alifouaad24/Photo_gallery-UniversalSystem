@@ -378,4 +378,16 @@ class ItemModel {
       globalCustomerId: json['globalCustomerId'],
     );
   }
+
+    Map<String, dynamic> toJson() {
+    return {
+      'id': itemId,
+      'description': description,
+      'itemDetails': itemDetails,
+      'basePrice': basePrice,
+      'upc': upc,
+      'category': category?.name,
+    };
+  }
+  
 }

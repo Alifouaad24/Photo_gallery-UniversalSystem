@@ -21,6 +21,7 @@ import 'package:photo_gallery/modules/gallery/views/session_photos_screen.dart';
 import 'package:photo_gallery/modules/home/views/home-screen.dart';
 import 'package:photo_gallery/modules/inventory/views/addImagesToItem.dart';
 import 'package:photo_gallery/modules/inventory/views/addNewItemToInventory.dart';
+import 'package:photo_gallery/modules/inventory/views/items_view.dart';
 import 'package:photo_gallery/modules/inventory/views/showInventory_view.dart';
 import 'package:photo_gallery/modules/splash/views/splash_screen.dart';
 import 'package:photo_gallery/widgets/session_folder_item.dart';
@@ -81,6 +82,11 @@ class AppPages {
     GetPage(
       name: Routes.invCamera,
       page: () => Addimagestoitem(),
+      binding: InventoryBinding(),
+    ),
+    GetPage(
+      name: Routes.showItems,
+      page: () => ItemsView(),
       binding: InventoryBinding(),
     ),
   ];

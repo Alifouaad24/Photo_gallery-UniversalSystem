@@ -9,6 +9,7 @@ import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/data/local/data_base.dart';
 import 'package:photo_gallery/data/repository/gallery_repository.dart';
 import 'package:photo_gallery/data/repository/inventory_repository.dart';
+import 'package:photo_gallery/models/ItemResponseModel.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
 import 'package:photo_gallery/modules/camera/views/itemdataDialog.dart';
 import 'package:photo_gallery/modules/inventory/views/EditInventoryResult.dart';
@@ -41,6 +42,7 @@ class InventoryController extends GetxController {
   int? remoteFolderIdCreated;
   int? currentItemId;
   int? currentInvId;
+  List<ItemResponseModel> items = [];
   //...........
 
   @override
@@ -231,7 +233,7 @@ class InventoryController extends GetxController {
       itemPrice: result.itemPrice,
       warehousePrice: result.warehousePrice,
       imageUrls: uploadedImageUrls,
-      qty: result.qty
+      qty: result.qty,
     );
 
     apiResult.fold(
@@ -255,8 +257,13 @@ class InventoryController extends GetxController {
             filteredInventory[fIndex] = data;
           }
         }
+        Get.back();
+        var businessId = _storageService.readInt('business_id');
 
+        getInventory(businessId!);
         Get.snackbar("تم", "تم تحديث بيانات العنصر بنجاح");
+        isSavingItem = false;
+        update();
       },
     );
 
@@ -722,6 +729,26 @@ class InventoryController extends GetxController {
       },
       (data) {
         platforms = data;
+      },
+    );
+
+    isLoading = false;
+    update();
+  }
+
+  Future<void> getItems(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllItems(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        items = data;
       },
     );
 

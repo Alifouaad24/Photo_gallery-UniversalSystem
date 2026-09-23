@@ -376,10 +376,11 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     setState(() => _isSaving = false);
 
     if (ok) {
-      Get.offAllNamed(Routes.home);
+      Get.snackbar('Success', 'Item added successfuly...!', backgroundColor:  Colors.green);
+      Get.offAllNamed(Routes.showInventory);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("تعذر رفع كل الصور، حاول مرة أخرى")),
+        const SnackBar(content: Text("Field to upload images please try again..."), backgroundColor: Colors.red)
       );
     }
   }

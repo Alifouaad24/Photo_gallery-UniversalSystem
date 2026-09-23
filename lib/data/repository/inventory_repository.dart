@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:photo_gallery/data/api/api_methods.dart';
 import 'package:photo_gallery/main.dart';
+import 'package:photo_gallery/models/ItemResponseModel.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
 
 class InventoryRepository {
@@ -74,6 +75,24 @@ class InventoryRepository {
       );
       var platforms = (response.data as List)
           .map((el) => PlatformModel.fromJson(el))
+          .toList();
+
+      return Right(platforms);
+    } on DioException catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<ItemResponseModel>>> getAllItems(
+    int businessId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Item/${businessId}',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      var platforms = (response.data as List)
+          .map((el) => ItemResponseModel.fromJson(el))
           .toList();
 
       return Right(platforms);
@@ -156,6 +175,8 @@ class InventoryRepository {
         if (warehousePrice != null) 'warehousePrice': warehousePrice,
         if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
       };
+
+      
 
       // TODO: عدّل المسار حسب الـ base URL والـ endpoint الفعلي عندك
       final response = await _dio.put(

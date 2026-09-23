@@ -25,7 +25,7 @@ class EditInventoryResult {
     required this.itemPrice,
     required this.warehousePrice,
     required this.newImages,
-    this.qty
+    this.qty,
   });
 }
 
@@ -72,7 +72,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
   late TextEditingController _detailsController;
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
-   late TextEditingController _qtyController;
+  late TextEditingController _qtyController;
 
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
@@ -87,21 +87,19 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
     final item = widget.item;
 
     _descriptionController = TextEditingController(
-      text: item.productDescription ?? item.item?.description ?? "",
+      text: item.item?.description ?? "",
     );
     _detailsController = TextEditingController(
-      text: item.notes ?? item.item?.itemDetails ?? "",
+      text: item.item?.itemDetails ?? "",
     );
     _itemPriceController = TextEditingController(
-      text: item.sitePrice ?? item.item?.basePrice?.toString() ?? "",
+      text: item.item?.basePrice?.toString() ?? "",
     );
-    _warehousePriceController = TextEditingController();
-    _qtyController  = TextEditingController();
-    final currentCategoryId =
-        item.category?.categoryId ??
-        item.categoryId ??
-        item.item?.category?.categoryId ??
-        item.item?.categoryId;
+    _warehousePriceController = TextEditingController(
+      text: item.sitePrice?.toString(),
+    );
+    _qtyController = TextEditingController(text: item.qty?.toString());
+    final currentCategoryId = item.item?.categoryId;
 
     if (currentCategoryId != null && widget.categories.isNotEmpty) {
       _selectedCategory = widget.categories.firstWhereOrNull(
@@ -117,6 +115,8 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
         (c) => c.itemConditionId == currentConditionId,
       );
     }
+
+    print(item.item!.toJson());
   }
 
   @override
@@ -163,14 +163,13 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       condition: _selectedCondition,
       description: _descriptionController.text.trim(),
       details: _detailsController.text.trim(),
-      itemPrice: double.tryParse(_itemPriceController.text.trim()),
-      warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
+      itemPrice: double.tryParse(_itemPriceController.text.trim()) ?? 0,
+      warehousePrice:
+          double.tryParse(_warehousePriceController.text.trim()) ?? 0,
       newImages: _newImages,
-      qty: int.parse(_qtyController.text.trim())
+      qty: int.tryParse(_qtyController.text.trim()) ?? 0,
     );
 
-    // ملاحظة: الترتيب (رفع الصور ثم بناء JSON وتحديث العنصر) يصير جوا
-    // controller.updateInventoryItem، والديالوج ينتظر هنا لحد ما تخلص العملية.
     await widget.onSave(result);
 
     if (!mounted) return;
@@ -360,18 +359,17 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                         ),
 
                         _fieldLabel("الكمية"),
-                                  TextFormField(
-                                    controller: _qtyController,
-                                    enabled: !_isSaving,
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                    decoration: _inputDecoration(
-                                      hint: "0",
-                                      icon: Icons.production_quantity_limits,
-                                    ),
-                                  ),
+                        TextFormField(
+                          controller: _qtyController,
+                          enabled: !_isSaving,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: _inputDecoration(
+                            hint: "0",
+                            icon: Icons.production_quantity_limits,
+                          ),
+                        ),
 
                         const SizedBox(height: 18),
 
