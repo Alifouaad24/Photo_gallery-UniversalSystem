@@ -15,7 +15,45 @@ class InventoryRepository {
   ) async {
     try {
       final response = await _dio.get(
-        '/Inventory/GetAllForImagerApp/${businessId}',
+        '/Inventory/GetAllInventory/${businessId}',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      var listInv = (response.data as List)
+          .map((e) => InventoryModel.fromJson(e))
+          .toList();
+
+      return Right(listInv);
+    } on DioException catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<InventoryModel>>> getComplatedInv(
+    int businessId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Inventory/GetAllWhereReadyToPublish/${businessId}',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      var listInv = (response.data as List)
+          .map((e) => InventoryModel.fromJson(e))
+          .toList();
+
+      return Right(listInv);
+    } on DioException catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<InventoryModel>>> getUnderProccesInv(
+    int businessId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Inventory/${businessId}',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -84,6 +122,42 @@ class InventoryRepository {
   }
 
   Future<Either<String, List<ItemResponseModel>>> getAllItems(
+    int businessId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Item/GetAllItems/${businessId}',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      var platforms = (response.data as List)
+          .map((el) => ItemResponseModel.fromJson(el))
+          .toList();
+
+      return Right(platforms);
+    } on DioException catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<ItemResponseModel>>> getAllUnderProccessItems(
+    int businessId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Item/GetAllUndeProccessItems/${businessId}',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      var platforms = (response.data as List)
+          .map((el) => ItemResponseModel.fromJson(el))
+          .toList();
+
+      return Right(platforms);
+    } on DioException catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<ItemResponseModel>>> getAllComplatedItems(
     int businessId,
   ) async {
     try {

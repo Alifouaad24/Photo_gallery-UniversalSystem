@@ -41,6 +41,7 @@ class InventoryController extends GetxController {
   NewItemDetailsResult? newItemDetails;
   int? remoteFolderIdCreated;
   int? currentItemId;
+  int? busId;
   int? currentInvId;
   List<ItemResponseModel> items = [];
   //...........
@@ -54,6 +55,7 @@ class InventoryController extends GetxController {
   Future<void> _bootstrap() async {
     db = await DatabaseHelper().database;
     var businessId = _storageService.readInt('business_id');
+    busId = businessId;
     if (businessId != null) {
       getInventory(businessId);
       getConditions();
@@ -68,6 +70,48 @@ class InventoryController extends GetxController {
     update();
 
     final result = await inventoryRepo.getInvByBusiness(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        inventoryList = data;
+        filteredInventory = List.from(data);
+      },
+    );
+
+    isLoadingInv = false;
+    update();
+  }
+
+  Future<void> getComplatedItems(int busId) async {
+    isLoadingInv = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getComplatedInv(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        inventoryList = data;
+        filteredInventory = List.from(data);
+      },
+    );
+
+    isLoadingInv = false;
+    update();
+  }
+
+  Future<void> getAllUnderProcessItems(int busId) async {
+    isLoadingInv = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getUnderProccesInv(busId);
 
     result.fold(
       (error) {
@@ -742,6 +786,46 @@ class InventoryController extends GetxController {
     update();
 
     final result = await inventoryRepo.getAllItems(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        items = data;
+      },
+    );
+
+    isLoading = false;
+    update();
+  }
+
+  Future<void> getComplatedItemsProducts(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllComplatedItems(busId);
+
+    result.fold(
+      (error) {
+        errorMessage = error.toString();
+      },
+      (data) {
+        items = data;
+      },
+    );
+
+    isLoading = false;
+    update();
+  }
+
+  Future<void> getUnderProccessItems(int busId) async {
+    isLoading = true;
+    errorMessage = null;
+    update();
+
+    final result = await inventoryRepo.getAllUnderProccessItems(busId);
 
     result.fold(
       (error) {

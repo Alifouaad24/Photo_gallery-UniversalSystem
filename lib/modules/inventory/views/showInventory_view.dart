@@ -68,9 +68,9 @@ class ShowinventoryView extends StatelessWidget {
       ),
       body: GetBuilder<InventoryController>(
         builder: (controller) {
-          if (controller.isLoadingInv) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          // ✅ ما عاد فيه early return هنا يدمّر الصفحة كلها وقت التحميل.
+          // البحث + شريط العداد/الفلتر يبقوا مبنيين طول الوقت، والـ loading
+          // يظهر بس جوا منطقة الليست (Expanded تحت).
 
           if (controller.errorMessage != null) {
             return Center(
@@ -81,7 +81,7 @@ class ShowinventoryView extends StatelessWidget {
             );
           }
 
-          if (controller.inventoryList.isEmpty) {
+          if (controller.inventoryList.isEmpty && !controller.isLoadingInv) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -178,35 +178,158 @@ class ShowinventoryView extends StatelessWidget {
                   ],
                 ),
               ),
-              controller.inventoryList.length > 0
-                  ? Text(
-                      "Count: ${controller.inventoryList.length}",
-                      style: TextStyle(fontSize: 18),
-                    )
-                  : SizedBox.shrink(),
 
-              /// -------- القائمة --------
-              Expanded(
-                child: items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "No Results Found",
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(height: 14),
-                            _cameraButton(onTap: _openCameraForNewItem),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(top: 4, bottom: 16),
-                        itemCount: items.length,
-                        itemBuilder: (_, index) =>
-                            _SimpleInventoryCard(item: items[index]),
+              /// -------- شريط العدّاد + الفلتر --------
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Count
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2_outlined,
+                              color: Colors.blue,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Inventory",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                "${controller.inventoryList.length} Items",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      // Filter
+                      // ⚠️ initialSelection يتقرأ مرة وحدة بس أول ما الـ widget
+                      // يتبنى. بما إن الشاشة ما عادت تنهدم وترجع تتبنى وقت
+                      // التحميل، هذا كافي يخلي الاختيار يثبت. لو تبي تخلي
+                      // الفلتر يعكس دايمًا الحالة الفعلية حتى بعد أي rebuild
+                      // مستقبلي، ضيف حقل `selectedFilter` بالـ Controller
+                      // وحدّثه جوا كل دالة فلترة، واربطه هنا بدل 'All' الثابتة.
+                      DropdownMenu<String>(
+                        initialSelection: 'All',
+                        width: 170,
+                        leadingIcon: const Icon(
+                          Icons.filter_list_rounded,
+                          size: 20,
+                        ),
+                        inputDecorationTheme: InputDecorationTheme(
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade200,
+                            ),
+                          ),
+                        ),
+                        dropdownMenuEntries: const [
+                          DropdownMenuEntry(value: 'All', label: 'All Items'),
+                          DropdownMenuEntry(
+                            value: 'Under proccess',
+                            label: 'Under Process',
+                          ),
+                          DropdownMenuEntry(
+                            value: 'Complated',
+                            label: 'Completed',
+                          ),
+                        ],
+                        onSelected: (value) {
+                          if (value == 'All') {
+                            controller.getInventory(controller.busId!);
+                          } else if (value == 'Complated') {
+                            controller.getComplatedItems(controller.busId!);
+                          } else if (value == 'Under proccess') {
+                            controller.getAllUnderProcessItems(
+                              controller.busId!,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              /// -------- القائمة: هنا بس نتحكم بالـ loading --------
+              Expanded(
+                child: controller.isLoadingInv
+                    ? const Center(child: CircularProgressIndicator())
+                    : items.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  "No Results Found",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 14),
+                                _cameraButton(onTap: _openCameraForNewItem),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(
+                              top: 4,
+                              bottom: 16,
+                            ),
+                            itemCount: items.length,
+                            itemBuilder: (_, index) =>
+                                _SimpleInventoryCard(item: items[index]),
+                          ),
               ),
             ],
           );
@@ -520,8 +643,9 @@ class _ImageGalleryViewerState extends State<_ImageGalleryViewer> {
                 : null,
           );
         },
-        loadingBuilder: (context, event) =>
-            const Center(child: CircularProgressIndicator(color: Colors.white)),
+        loadingBuilder: (context, event) => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       ),
     );
   }
