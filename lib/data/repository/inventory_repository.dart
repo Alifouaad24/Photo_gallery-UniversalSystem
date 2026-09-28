@@ -371,8 +371,8 @@ class InventoryRepository {
   }) async {
     try {
       final response = await _dio.post(
-        '/Item/UpdateUpc/${itemId}',
-        data: {'upc': upc},
+        '/Item/UpdateUpc',
+        data: { 'itemId': itemId,'upc': upc},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);

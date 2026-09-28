@@ -868,6 +868,7 @@ class InventoryController extends GetxController {
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
           );
+          getInventory(busId!);
           return true;
         },
       );
