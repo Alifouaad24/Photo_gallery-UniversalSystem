@@ -11,6 +11,8 @@ class EditInventoryResult {
   final CategoryModel? category;
   final ItemConditionModel? condition;
   final String description;
+  String? brand;
+  final PlatformModel? platform;
   final String details;
   final double? itemPrice; // سعر الايتم
   final double? warehousePrice; // سعر المخزن
@@ -19,7 +21,9 @@ class EditInventoryResult {
 
   EditInventoryResult({
     required this.category,
+    this.brand,
     required this.condition,
+    required this.platform,
     required this.description,
     required this.details,
     required this.itemPrice,
@@ -34,12 +38,14 @@ void showEditInventoryDialog(
   InventoryModel item, {
   required List<CategoryModel> categories,
   required List<ItemConditionModel> conditions,
+  required List<PlatformModel> platforms,
   required Future<void> Function(EditInventoryResult result) onSave,
 }) {
   Get.dialog(
     _EditInventoryDialog(
       item: item,
       categories: categories,
+      platforms: platforms,
       conditions: conditions,
       onSave: onSave,
     ),
@@ -50,12 +56,14 @@ void showEditInventoryDialog(
 class _EditInventoryDialog extends StatefulWidget {
   final InventoryModel item;
   final List<CategoryModel> categories;
+  final List<PlatformModel> platforms;
   final List<ItemConditionModel> conditions;
   final Future<void> Function(EditInventoryResult result) onSave;
 
   const _EditInventoryDialog({
     required this.item,
     required this.categories,
+    required this.platforms,
     required this.conditions,
     required this.onSave,
   });
@@ -69,11 +77,12 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
   final ImagePicker _picker = ImagePicker();
 
   late TextEditingController _descriptionController;
+  late TextEditingController _brandingController;
   late TextEditingController _detailsController;
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
   late TextEditingController _qtyController;
-
+  PlatformModel? _selectedPlatform;
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
 
@@ -86,6 +95,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
 
     final item = widget.item;
 
+    _brandingController = TextEditingController(text: "");
     _descriptionController = TextEditingController(
       text: item.item?.description ?? "",
     );
@@ -107,6 +117,13 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       );
     }
 
+    final currentPlatformId = item.item?.platform?.platformId;
+    if (currentPlatformId != null && widget.platforms.isNotEmpty) {
+      _selectedPlatform = widget.platforms.firstWhereOrNull(
+        (p) => p.platformId == currentPlatformId,
+      );
+    }
+
     final currentConditionId =
         item.itemCondition?.itemConditionId ?? item.itemConditionId;
 
@@ -114,6 +131,18 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       _selectedCondition = widget.conditions.firstWhereOrNull(
         (c) => c.itemConditionId == currentConditionId,
       );
+    }
+
+    for (final c in [
+      _descriptionController,
+      _detailsController,
+      _itemPriceController,
+      _warehousePriceController,
+      _qtyController,
+    ]) {
+      c.addListener(() {
+        if (mounted) setState(() {});
+      });
     }
 
     print(item.item!.toJson());
@@ -160,7 +189,9 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
 
     final result = EditInventoryResult(
       category: _selectedCategory,
+      brand: _brandingController.text.trim(),
       condition: _selectedCondition,
+      platform: _selectedPlatform,
       description: _descriptionController.text.trim(),
       details: _detailsController.text.trim(),
       itemPrice: double.tryParse(_itemPriceController.text.trim()) ?? 0,
@@ -231,6 +262,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                           decoration: _inputDecoration(
                             hint: "اختر الفئة",
                             icon: Icons.category_outlined,
+                            isEmpty: _selectedCategory == null,
                           ),
                           items: widget.categories
                               .map(
@@ -254,6 +286,37 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                         ),
 
                         const SizedBox(height: 16),
+                        _fieldLabel("المنصة (Platform)"),
+                        DropdownButtonFormField<PlatformModel>(
+                          initialValue: _selectedPlatform,
+                          isExpanded: true,
+                          decoration: _inputDecoration(
+                            hint: "اختر المنصة",
+                            icon: Icons.devices_other_outlined,
+                            isEmpty: _selectedPlatform == null,
+                          ),
+                          items: widget.platforms
+                              .map(
+                                (p) => DropdownMenuItem(
+                                  value: p,
+                                  child: Text(p.description ?? "-"),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: widget.platforms.isEmpty || _isSaving
+                              ? null
+                              : (value) {
+                                  setState(() => _selectedPlatform = value);
+                                },
+                          hint: widget.platforms.isEmpty
+                              ? const Text(
+                                  "سيتم تحميل المنصات من الـ API",
+                                  style: TextStyle(fontSize: 12),
+                                )
+                              : null,
+                        ),
+
+                        const SizedBox(height: 16),
 
                         _fieldLabel("الحالة (Condition)"),
                         DropdownButtonFormField<ItemConditionModel>(
@@ -262,6 +325,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                           decoration: _inputDecoration(
                             hint: "اختر الحالة",
                             icon: Icons.flag_outlined,
+                            isEmpty: _selectedCondition == null,
                           ),
                           items: widget.conditions
                               .map(
@@ -294,6 +358,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                           decoration: _inputDecoration(
                             hint: "اكتب وصف المنتج",
                             icon: Icons.description_outlined,
+                            isEmpty: _descriptionController.text.isEmpty,
                           ),
                         ),
 
@@ -307,6 +372,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                           decoration: _inputDecoration(
                             hint: "اكتب تفاصيل إضافية",
                             icon: Icons.list_alt_rounded,
+                            isEmpty: _detailsController.text.isEmpty,
                           ),
                         ),
 
@@ -329,6 +395,8 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                                     decoration: _inputDecoration(
                                       hint: "0.00",
                                       icon: Icons.sell_outlined,
+                                      isEmpty:
+                                          _itemPriceController.text.isEmpty,
                                     ),
                                   ),
                                 ],
@@ -350,6 +418,9 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                                     decoration: _inputDecoration(
                                       hint: "0.00",
                                       icon: Icons.warehouse_outlined,
+                                      isEmpty: _warehousePriceController
+                                          .text
+                                          .isEmpty,
                                     ),
                                   ),
                                 ],
@@ -368,11 +439,24 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
                           decoration: _inputDecoration(
                             hint: "0",
                             icon: Icons.production_quantity_limits,
+                            isEmpty: _qtyController.text.isEmpty,
                           ),
                         ),
 
                         const SizedBox(height: 18),
-
+                        _fieldLabel("Brand"),
+                        TextFormField(
+                          controller: _brandingController,
+                          enabled: !_isSaving,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: _inputDecoration(
+                            hint: "",
+                            icon: Icons.branding_watermark,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
                         _fieldLabel("الصور"),
                         Wrap(
                           spacing: 10,
@@ -530,7 +614,9 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
   InputDecoration _inputDecoration({
     required String hint,
     required IconData icon,
+    bool isEmpty = false,
   }) {
+    final borderColor = isEmpty ? Colors.red : Colors.grey.shade300;
     return InputDecoration(
       hintText: hint,
       prefixIcon: Icon(icon, size: 20),
@@ -542,7 +628,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(color: borderColor, width: isEmpty ? 1.5 : 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),

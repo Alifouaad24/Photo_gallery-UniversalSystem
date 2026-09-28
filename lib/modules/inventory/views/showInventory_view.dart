@@ -181,10 +181,7 @@ class ShowinventoryView extends StatelessWidget {
 
               /// -------- شريط العدّاد + الفلتر --------
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -270,9 +267,7 @@ class ShowinventoryView extends StatelessWidget {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.grey.shade200,
-                            ),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
                           ),
                         ),
                         dropdownMenuEntries: const [
@@ -308,28 +303,25 @@ class ShowinventoryView extends StatelessWidget {
                 child: controller.isLoadingInv
                     ? const Center(child: CircularProgressIndicator())
                     : items.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  "No Results Found",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                const SizedBox(height: 14),
-                                _cameraButton(onTap: _openCameraForNewItem),
-                              ],
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "No Results Found",
+                              style: TextStyle(fontSize: 16),
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.only(
-                              top: 4,
-                              bottom: 16,
-                            ),
-                            itemCount: items.length,
-                            itemBuilder: (_, index) =>
-                                _SimpleInventoryCard(item: items[index]),
-                          ),
+                            const SizedBox(height: 14),
+                            _cameraButton(onTap: _openCameraForNewItem),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(top: 4, bottom: 16),
+                        itemCount: items.length,
+                        itemBuilder: (_, index) =>
+                            _SimpleInventoryCard(item: items[index]),
+                      ),
               ),
             ],
           );
@@ -363,6 +355,7 @@ class _SimpleInventoryCard extends StatelessWidget {
     final controller = Get.find<InventoryController>();
     showEditInventoryDialog(
       item,
+      platforms: controller.platforms,
       categories: controller.categories,
       conditions: controller.conditions,
       onSave: (result) async {
@@ -371,8 +364,18 @@ class _SimpleInventoryCard extends StatelessWidget {
     );
   }
 
-  /// بيفتح معرض صور المنتج كامل الشاشة: تقليب بين الصور، زوم بإصبعين،
-  /// وتدوير بإصبعين (enableRotation جوه PhotoView).
+  void _openUpcDialog(BuildContext context) {
+    final controller = Get.find<InventoryController>();
+    Get.dialog(
+      _EditUpcDialog(
+        initialUpc: item.upc ?? item.item?.upc ?? "",
+        onSave: (newUpc) =>
+            controller.updateInventoryUpc(item.item!.itemId!, newUpc),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   void _openImageViewer(BuildContext context) {
     final urls = (item.item?.images ?? [])
         .map((img) => img.imageUrl ?? "")
@@ -463,6 +466,7 @@ class _SimpleInventoryCard extends StatelessWidget {
                   icon: Icons.qr_code_rounded,
                   label: "UPC",
                   done: hasUpc,
+                  onTap: () => _openUpcDialog(context),
                 ),
                 const SizedBox(width: 8),
                 _StatusIcon(
@@ -643,8 +647,170 @@ class _ImageGalleryViewerState extends State<_ImageGalleryViewer> {
                 : null,
           );
         },
-        loadingBuilder: (context, event) => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+        loadingBuilder: (context, event) =>
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
+      ),
+    );
+  }
+}
+
+class _EditUpcDialog extends StatefulWidget {
+  final String initialUpc;
+final Future<bool> Function(String upc) onSave;
+
+  const _EditUpcDialog({required this.initialUpc, required this.onSave});
+
+  @override
+  State<_EditUpcDialog> createState() => _EditUpcDialogState();
+}
+
+class _EditUpcDialogState extends State<_EditUpcDialog> {
+  late final TextEditingController _upcController;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _upcController = TextEditingController(text: widget.initialUpc);
+    _upcController.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _upcController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scan() async {
+    final code = await Get.to<String>(() => const BarcodeScannerView());
+    if (code != null && code.isNotEmpty) _upcController.text = code;
+  }
+
+  Future<void> _handleSave() async {
+    final upc = _upcController.text.trim();
+    if (upc.isEmpty || _isSaving) return;
+
+    setState(() => _isSaving = true);
+    final ok = await widget.onSave(upc);
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (ok) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEmpty = _upcController.text.trim().isEmpty;
+
+    return GetBuilder<InventoryController>(
+      builder: (controller) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.qr_code_rounded, color: _Palette.primary),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      "تعديل UPC",
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _isSaving ? null : () => Get.back(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _upcController,
+                enabled: !_isSaving,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                onSubmitted: (_) => _handleSave(),
+                decoration: InputDecoration(
+                  hintText: "اكتب أو امسح الـ UPC",
+                  prefixIcon: const Icon(Icons.qr_code_rounded),
+                  suffixIcon: IconButton(
+                    onPressed: _isSaving ? null : _scan,
+                    icon: const Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: _Palette.primary,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: _Palette.bg,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: isEmpty ? _Palette.danger : _Palette.border,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: _Palette.primary,
+                      width: 1.4,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isSaving ? null : () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text("إلغاء"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: (_isSaving || isEmpty) ? null : _handleSave,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _Palette.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "حفظ",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

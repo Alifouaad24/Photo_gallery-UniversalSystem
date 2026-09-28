@@ -42,6 +42,7 @@ class InventoryController extends GetxController {
   int? remoteFolderIdCreated;
   int? currentItemId;
   int? busId;
+  bool isSaveUpc = false;
   int? currentInvId;
   List<ItemResponseModel> items = [];
   //...........
@@ -270,11 +271,13 @@ class InventoryController extends GetxController {
     // -------- الخطوة 2: تجهيز JSON بكل الباراميترات وإرساله --------
     final apiResult = await inventoryRepo.updateInventoryItem(
       inventoryId: inventoryId,
+      brand: result.brand,
       categoryId: result.category?.categoryId,
       itemConditionId: result.condition?.itemConditionId,
       description: result.description,
       details: result.details,
       itemPrice: result.itemPrice,
+      platformId: result.platform?.platformId,
       warehousePrice: result.warehousePrice,
       imageUrls: uploadedImageUrls,
       qty: result.qty,
@@ -838,5 +841,39 @@ class InventoryController extends GetxController {
 
     isLoading = false;
     update();
+  }
+
+  Future<bool> updateInventoryUpc(int itemId, String upc) async {
+    isSaveUpc = true;
+    update();
+
+    try {
+      final result = await inventoryRepo.updateUpc(itemId: itemId, upc: upc);
+      return result.fold(
+        (failure) {
+          Get.snackbar(
+            "فشل",
+            "تعذر حفظ الـ UPC",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return false;
+        },
+        (success) {
+          Get.snackbar(
+            "تم",
+            "تم حفظ الـ UPC بنجاح",
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return true;
+        },
+      );
+    } finally {
+      isSaveUpc = false;
+      update();
+    }
   }
 }

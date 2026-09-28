@@ -362,9 +362,6 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     }
   }
 
-  /// زرار "حفظ المنتج": بيرفع كل الصور المجمعة دفعة واحدة (batch) وبعدين
-  /// المفروض يحفظ عنصر المخزون فعليًا (لسه TODO جوه finalizeAndSaveItem
-  /// في الكنترولر لحد ما توضح شكل الـ API بتاع الإنشاء).
   Future<void> _saveProduct() async {
     if (_isSaving) return;
 

@@ -234,16 +234,20 @@ class InventoryRepository {
     String? description,
     String? details,
     double? itemPrice,
+    String? brand,
     double? warehousePrice,
     List<String>? imageUrls,
+    int? platformId,
     int? qty
   }) async {
     try {
       final body = {
         if (categoryId != null) 'categoryId': categoryId,
+        if (brand != null) 'brand': brand,
         if (itemConditionId != null) 'itemConditionId': itemConditionId,
         if (description != null) 'description': description,
         if (details != null) 'details': details,
+        if(qty != null) 'qty' : qty,
         if(qty != null) 'qty' : qty,
         if (itemPrice != null) 'itemPrice': itemPrice,
         if (warehousePrice != null) 'warehousePrice': warehousePrice,
@@ -353,6 +357,22 @@ class InventoryRepository {
       final response = await _dio.get(
         '/Item/AddItemToInv/${itemId}',
 
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return Right(response.data);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, Map<String, dynamic>>> updateUpc({
+    int? itemId,
+    String? upc // <-- جديد
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/Item/UpdateUpc/${itemId}',
+        data: {'upc': upc},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);
