@@ -399,6 +399,14 @@ class _ItemsViewState extends State<ItemsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: context.isPhone
+          ? AppBar(
+              elevation: 0,
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              title: const Text('Items'),
+            )
+          : null,
       backgroundColor: _bg,
       body: SafeArea(
         child: GetBuilder<InventoryController>(

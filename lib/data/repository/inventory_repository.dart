@@ -354,7 +354,7 @@ class InventoryRepository {
     int? itemId, // <-- جديد
   }) async {
     try {
-      final response = await _dio.get(
+      final response = await _dio.post(
         '/Item/AddItemToInv/${itemId}',
 
         options: Options(headers: {'Authorization': 'Bearer $token'}),
