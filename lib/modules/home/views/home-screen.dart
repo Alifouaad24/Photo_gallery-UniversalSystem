@@ -124,31 +124,31 @@ class HomeScreen extends StatelessWidget {
                   mainAxisSpacing: 18,
                   childAspectRatio: .95,
                   children: [
-                    _menuCard(
-                      icon: Icons.camera_alt_rounded,
-                      color: Colors.blue,
-                      title: "Camera",
-                      onTap: () async {
-                        var cameraController = Get.find<CameraGetController>();
-                        cameraController.AddToItemAndInventory = false;
-                        cameraController.ItemUpc = '';
-                        cameraController.update();
-                        final changed = await Get.toNamed(Routes.cameraSession);
+                    // _menuCard(
+                    //   icon: Icons.camera_alt_rounded,
+                    //   color: Colors.blue,
+                    //   title: "Camera",
+                    //   onTap: () async {
+                    //     var cameraController = Get.find<CameraGetController>();
+                    //     cameraController.AddToItemAndInventory = false;
+                    //     cameraController.ItemUpc = '';
+                    //     cameraController.update();
+                    //     final changed = await Get.toNamed(Routes.cameraSession);
 
-                        if (changed == true) {
-                          Get.toNamed(Routes.gallery);
-                        }
-                      },
-                    ),
+                    //     if (changed == true) {
+                    //       Get.toNamed(Routes.gallery);
+                    //     }
+                    //   },
+                    // ),
 
-                    _menuCard(
-                      icon: Icons.photo_library_rounded,
-                      color: Colors.green,
-                      title: "Gallery",
-                      onTap: () {
-                        Get.toNamed(Routes.gallery);
-                      },
-                    ),
+                    // _menuCard(
+                    //   icon: Icons.photo_library_rounded,
+                    //   color: Colors.green,
+                    //   title: "Gallery",
+                    //   onTap: () {
+                    //     Get.toNamed(Routes.gallery);
+                    //   },
+                    // ),
 
                     _menuCard(
                       icon: Icons.search,

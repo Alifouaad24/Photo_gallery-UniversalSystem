@@ -23,7 +23,13 @@ class SplashController extends GetxController {
     selectedBusinessId = business.businessId;
     storageService.writeInt('business_id', business.businessId);
     storageService.writeString('business_Name', business.businessName);
-
+    if (business.businessName == 'Duty') {
+      storageService.writeString('product_key', 'upc');
+    } else if (business.businessName == 'FHD') {
+      storageService.writeString('product_key', 'sku');
+    }else {
+      storageService.writeString('product_key', '');
+    } 
     update();
   }
 

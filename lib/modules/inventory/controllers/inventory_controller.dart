@@ -33,6 +33,7 @@ class InventoryController extends GetxController {
   int? currentFolderId;
   Directory? sessionFolder;
   String ItemUpc = '';
+  String ItemSKU = '';
   bool showJustForAdd = true;
   int? currentLocalFolderId;
   Database? db;
@@ -617,6 +618,7 @@ class InventoryController extends GetxController {
       itemDetails: details?.details,
       upc: ItemUpc.isNotEmpty ? ItemUpc : null,
       businessId: businessId,
+      sku: ItemSKU.isNotEmpty ? ItemSKU : null,
       categoryId: details?.category?.categoryId,
       platformId: details?.platform?.platformId,
       basePrice: details?.itemPrice ?? 0,
@@ -731,7 +733,8 @@ class InventoryController extends GetxController {
     isAddingToInventory = true;
     update();
 
-    final result = await inventoryRepo.AddToInventory(itemId: itemId);
+    var businessId = _storageService.readInt('business_id');
+    final result = await inventoryRepo.AddToInventory(itemId: itemId, businessId: businessId!);
 
     final success = result.fold(
       (error) {
@@ -946,4 +949,10 @@ class InventoryController extends GetxController {
       update();
     }
   }
+
+  Future<void> addCapturedImage(String path) async {
+  // نفس منطق الحفظ اللي بتستخدمه شاشة الكاميرا (DB محلي مثلاً)
+  // images.add({'id': newId, 'name': path, 'isUploaded': 0});
+  update();
+}
 }

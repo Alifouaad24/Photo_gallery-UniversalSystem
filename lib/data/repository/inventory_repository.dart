@@ -298,6 +298,7 @@ class InventoryRepository {
     double? length,
     required double basePrice,
     int? itemConditionId,
+    String? sku,
     String? invPrice,
     int? qty,
   }) async {
@@ -308,6 +309,7 @@ class InventoryRepository {
           'ItemDescription': itemDescription,
           'ItemDetails': itemDetails,
           'upc': upc,
+          'sku': sku,
           'BusinessId': businessId,
           'CategoryId': categoryId,
           'PlatformId': platformId,
@@ -346,11 +348,12 @@ class InventoryRepository {
   }
 
   Future<Either<String, Map<String, dynamic>>> AddToInventory({
-    int? itemId, // <-- جديد
+    int? itemId,
+    int? businessId, // <-- جديد
   }) async {
     try {
       final response = await _dio.post(
-        '/Item/AddItemToInv/${itemId}/27',
+        '/Item/AddItemToInv/$itemId/$businessId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);

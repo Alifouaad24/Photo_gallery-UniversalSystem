@@ -2,10 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/modules/camera/views/itemdataDialog.dart';
 import 'package:photo_gallery/modules/inventory/controllers/inventory_controller.dart';
+import 'package:photo_gallery/modules/inventory/views/TextScannerScreen.dart';
 import 'package:photo_gallery/modules/inventory/views/addUpcToItem.dart';
+// [جديد SKU] شاشة قراءة النص — عدّل المسار حسب مكان الملف عندك
+
+/// none = لسه ما اختارش، upc = المسار القديم زي ما هو، camera = صور فقط
+enum _AddMode { none, upc, camera }
 
 // ملحوظة: استيراد addUpcToItem.dart وcamera_controller.dart كانوا مش
 // مستخدمين في أي مكان بالكود، فشلتهم عشان يمنعوا تحذير "unused_import".
@@ -35,11 +42,18 @@ class Addnewitemtoinventory extends StatefulWidget {
 
 class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   late final InventoryController cameraController;
+  final storage = Get.find<StorageLocalService>();
+
+  /// [جديد] الوضع اللي المستخدم اختاره من شاشة "اختر طريقة الإضافة"
+  _AddMode _mode = _AddMode.none;
+  final ImagePicker _picker = ImagePicker();
+  bool _isPickingFromGallery = false;
 
   /// الباركود اللي اتقرأ من الكاميرا (أو اتكتب يدويًا). لو فاضي = زرار الكاميرا معطل.
   String _barcode = '';
   bool _isPreparing = false;
   bool _isSearching = false;
+  String productKey = '';
   final TextEditingController _barcodeController = TextEditingController();
 
   /// true لو المستخدم رجع من شاشة الكاميرا وفيه صور اتلقطت فعلًا —
@@ -47,13 +61,16 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   bool _hasCapturedImages = false;
   bool _isSaving = false;
 
+  /// [جديد SKU] true لو productKey = sku → زرار المسح بيقرأ نص بدل باركود.
+  /// أي قيمة تانية (upc أو فاضي) = السلوك القديم بالظبط.
+  bool get _isSku => productKey.trim().toLowerCase() == 'sku';
+
   @override
   void initState() {
     super.initState();
-    // initState لازم تكون sync دايمًا، فبننادي دالة async منفصلة بدل
-    // ما نحط await جوه initState نفسها (ده كان بيرمي خطأ compile).
+    productKey = storage.readString('product_key') ?? '';
+    print(productKey);
     cameraController = Get.find<InventoryController>();
-    // _prepareFolder();
   }
 
   Future<void> _prepareFolder() async {
@@ -96,6 +113,15 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     _searchForItem();
   }
 
+  /// [جديد SKU] بيفتح شاشة قراءة النص، والنتيجة بتتحط في نفس الحقل
+  /// وبتتخزن في ItemSKU (عن طريق _applyBarcode).
+  Future<void> _openTextScanner() async {
+    final result = await Get.to<String>(() => const TextScannerScreen());
+    if (result == null || result.trim().isEmpty) return;
+
+    _applyBarcode(result);
+  }
+
   /// بتتنادى سواء من نتيجة الكاميرا أو من كتابة المستخدم اليدوية.
   /// دي بقت sync عادية (من غير async) لأنها بقت مش بتعمل أي نداء شبكة
   /// بنفسها؛ البحث الفعلي بقى في دالة منفصلة _searchForItem تحت.
@@ -122,7 +148,12 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
       );
     }
 
-    cameraController.ItemUpc = trimmed;
+    // [جديد SKU] في وضع SKU القيمة بتتخزن في ItemSKU، غير كده زي ما كان
+    if (_isSku) {
+      cameraController.ItemSKU = trimmed;
+    } else {
+      cameraController.ItemUpc = trimmed;
+    }
     cameraController.update();
   }
 
@@ -346,7 +377,12 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   Future<void> _openCamera() async {
     if (!_hasBarcode) return; // حماية إضافية، الزرار أصلًا معطل بصريًا
     await _ensureFolder();
-    cameraController.ItemUpc = _barcode;
+    // [جديد SKU] في وضع SKU منكتبش القيمة في ItemUpc
+    if (_isSku) {
+      cameraController.ItemSKU = _barcode;
+    } else {
+      cameraController.ItemUpc = _barcode;
+    }
     cameraController.update();
 
     await Get.toNamed(Routes.invCamera);
@@ -373,11 +409,18 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     setState(() => _isSaving = false);
 
     if (ok) {
-      Get.snackbar('Success', 'Item added successfuly...!', backgroundColor:  Colors.green);
+      Get.snackbar(
+        'Success',
+        'Item added successfuly...!',
+        backgroundColor: Colors.green,
+      );
       Get.offAllNamed(Routes.showInventory);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Field to upload images please try again..."), backgroundColor: Colors.red)
+        const SnackBar(
+          content: Text("Field to upload images please try again..."),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -391,207 +434,368 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     });
   }
 
+  // =====================================================================
+  // [جديد] دوال اختيار طريقة الإضافة ووضع "كاميرا فقط"
+  // =====================================================================
+
+  void _selectMode(_AddMode mode) {
+    setState(() => _mode = mode);
+  }
+
+  /// فتح الكاميرا في وضع "كاميرا فقط" — من غير شرط وجود باركود
+  Future<void> _openCameraOnly() async {
+    await _ensureFolder();
+    if (cameraController.currentFolderId == null) return;
+
+    cameraController.ItemUpc = '';
+    cameraController.update();
+
+    await Get.toNamed(Routes.invCamera);
+
+    if (mounted) {
+      setState(() => _hasCapturedImages = cameraController.images.isNotEmpty);
+    }
+  }
+
+  /// اختيار صور من المعرض (بحد أقصى 10 صور إجمالًا)
+  Future<void> _pickFromGallery() async {
+    if (_isPickingFromGallery) return;
+
+    final remaining = 10 - cameraController.images.length;
+    if (remaining <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("وصلت للحد الأقصى (10 صور)")),
+      );
+      return;
+    }
+
+    setState(() => _isPickingFromGallery = true);
+    try {
+      await _ensureFolder();
+      if (cameraController.currentFolderId == null) return;
+
+      final picked = await _picker.pickMultiImage(imageQuality: 85);
+      for (final file in picked.take(remaining)) {
+        await cameraController.addCapturedImage(file.path);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickingFromGallery = false;
+          _hasCapturedImages = cameraController.images.isNotEmpty;
+        });
+      }
+    }
+  }
+
+  // =====================================================================
+  // build
+  // =====================================================================
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _Palette.bg,
-      appBar: AppBar(
-        backgroundColor: _Palette.card,
-        elevation: 0,
-        scrolledUnderElevation: 0.5,
-        shadowColor: Colors.black.withOpacity(0.08),
-        foregroundColor: _Palette.ink,
-        centerTitle: false,
-        title: const Text(
-          "إضافة منتج جديد",
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+    return PopScope(
+      // لو المستخدم اختار وضع، زرار الرجوع يرجعه لشاشة الاختيار بدل ما يقفل الصفحة
+      canPop: _mode == _AddMode.none,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _mode = _AddMode.none);
+      },
+      child: Scaffold(
+        backgroundColor: _Palette.bg,
+        appBar: AppBar(
+          backgroundColor: _Palette.card,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          shadowColor: Colors.black.withOpacity(0.08),
+          foregroundColor: _Palette.ink,
+          centerTitle: false,
+          leading: _mode != _AddMode.none
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: () => setState(() => _mode = _AddMode.none),
+                )
+              : null,
+          title: const Text(
+            "إضافة منتج جديد",
+            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                /// -------- Illustration / icon circle (تدرج لوني + ظل) --------
-                Container(
-                  width: 108,
-                  height: 108,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [_Palette.primary, Color(0xFF6E8CFF)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _Palette.primary.withOpacity(0.28),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  /// -------- Illustration / icon circle (تدرج لوني + ظل) --------
+                  Container(
+                    width: 108,
+                    height: 108,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [_Palette.primary, Color(0xFF6E8CFF)],
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2_rounded,
-                    size: 46,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  "أضف منتجًا جديدًا للمخزون",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: _Palette.ink,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                const Text(
-                  "اتبع الخطوات لإضافة المنتج للمخزون",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13.5, color: _Palette.inkMuted),
-                ),
-
-                const SizedBox(height: 30),
-
-                /// -------- الخطوة 1: الباركود (مسح أو إدخال يدوي) --------
-                _BarcodeInputCard(
-                  controller: _barcodeController,
-                  isDone: _hasBarcode,
-                  isSearching: _isSearching,
-                  onScanTap: _openBarcodeScanner,
-                  onSearchTap: _searchForItem,
-                  onChanged: _applyBarcode,
-                ),
-                if (cameraController.showJustForAdd) const SizedBox(height: 5),
-                if (cameraController.showJustForAdd)
-                  /// --if (cameraController.showJustForAdd)------ خط واصل: بيتلون أخضر لو الخطوة اللي قبله خلصت --------
-                  _StepConnector(active: _hasBarcode),
-
-                const SizedBox(height: 5),
-
-                /// -------- الخطوة 2: بيانات المنتج (نُقلت من شاشة الكاميرا) --------
-                if (cameraController.showJustForAdd)
-                  _StepCard(
-                    stepNumber: 2,
-                    title: "بيانات المنتج",
-                    subtitle: cameraController.newItemDetails != null
-                        ? "تم تعبئة البيانات، اضغط للتعديل"
-                        : "الفئة، الحالة، المنصة وتفاصيل تانية (اختياري)",
-                    icon: Icons.inventory_2_outlined,
-                    onTap: _openItemDetailsDialog,
-                    isDone: cameraController.newItemDetails != null,
-                  ),
-                if (cameraController.showJustForAdd) const SizedBox(height: 12),
-                if (cameraController.showJustForAdd)
-                  /// -------- خط واصل --------
-                  _StepConnector(
-                    active: cameraController.newItemDetails != null,
-                  ),
-                if (cameraController.showJustForAdd) const SizedBox(height: 5),
-                if (cameraController.showJustForAdd)
-                  /// -------- الخطوة 3: تصوير المنتج --------
-                  _StepCard(
-                    stepNumber: 3,
-                    title: "صوّر المنتج",
-                    subtitle: _hasCapturedImages
-                        ? "${cameraController.images.length} صورة جاهزة — اضغط لإضافة المزيد"
-                        : (_hasBarcode
-                              ? "اضغط لفتح الكاميرا وتصوير المنتج"
-                              : "امسح الباركود أولًا لتفعيل هذه الخطوة"),
-                    icon: Icons.camera_alt_rounded,
-                    onTap: _openCamera,
-                    enabled: _hasBarcode,
-                    isDone: _hasCapturedImages,
-                  ),
-                if (cameraController.showJustForAdd)
-                  /// -------- معرض الصور الملتقطة --------
-                  if (_hasCapturedImages) ...[
-                    const SizedBox(height: 16),
-                    _CapturedPhotosGallery(
-                      images: cameraController.images,
-                      onAddMore: _openCamera,
-                      onRemove: _removePhoto,
-                    ),
-                  ],
-                if (cameraController.showJustForAdd)
-                  /// -------- زرار حفظ المنتج: بيظهر بس بعد ما يتلقط صورة واحدة على الأقل --------
-                  if (_hasCapturedImages) ...[
-                    const SizedBox(height: 22),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _saveProduct,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _Palette.primary,
-                          disabledBackgroundColor: _Palette.primary.withOpacity(
-                            0.6,
-                          ),
-                          elevation: 0,
-                          shadowColor: _Palette.primary.withOpacity(0.35),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _Palette.primary.withOpacity(0.28),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
                         ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.cloud_upload_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "حفظ المنتج",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15.5,
-                                      letterSpacing: -0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.inventory_2_rounded,
+                      size: 46,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    "أضف منتجًا جديدًا للمخزون",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: _Palette.ink,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  const Text(
+                    "اتبع الخطوات لإضافة المنتج للمخزون",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13.5, color: _Palette.inkMuted),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  /// -------- هنا بيتحدد إيه اللي يظهر حسب اختيار المستخدم --------
+                  if (_mode == _AddMode.none) _buildModeChooser(),
+                  if (_mode == _AddMode.upc) ..._buildUpcFlow(),
+                  if (_mode == _AddMode.camera) ..._buildCameraOnlyFlow(),
+
+                  if (_isPreparing) ...[
+                    const SizedBox(height: 24),
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ],
-
-                if (_isPreparing) ...[
-                  const SizedBox(height: 24),
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
                 ],
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
+
+  /// [جديد] شاشة الاختيار: UPC أو Camera
+  Widget _buildModeChooser() {
+    return Column(
+      children: [
+        const Text(
+          "اختر طريقة الإضافة",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: _Palette.ink,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _ModeOptionCard(
+                icon: Icons.barcode_reader,
+                title: "UPC | SKU",
+                subtitle: "باركود + بيانات + صور",
+                onTap: () => _selectMode(_AddMode.upc),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ModeOptionCard(
+                icon: Icons.camera_alt_rounded,
+                title: "Camera",
+                subtitle: "إضافة صور فقط",
+                onTap: () => _selectMode(_AddMode.camera),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// مسار UPC: نفس عناصر الصفحة القديمة بالظبط وبنفس شروطها
+  /// (showJustForAdd و _hasBarcode و _hasCapturedImages) من غير أي تغيير في المنطق.
+  List<Widget> _buildUpcFlow() {
+    return [
+      /// -------- الخطوة 1: الباركود (مسح أو إدخال يدوي) --------
+      _BarcodeInputCard(
+        controller: _barcodeController,
+        isDone: _hasBarcode,
+        isSearching: _isSearching,
+        // [جديد SKU] نفس مكان الزرار، بس بيفتح قراءة نص لو productKey = sku
+        isSku: _isSku,
+        onScanTap: _isSku ? _openTextScanner : _openBarcodeScanner,
+        onSearchTap: _searchForItem,
+        onChanged: _applyBarcode,
+      ),
+      if (cameraController.showJustForAdd) const SizedBox(height: 5),
+      if (cameraController.showJustForAdd)
+        /// -------- خط واصل: بيتلون أخضر لو الخطوة اللي قبله خلصت --------
+        _StepConnector(active: _hasBarcode),
+
+      const SizedBox(height: 5),
+
+      /// -------- الخطوة 2: بيانات المنتج (نُقلت من شاشة الكاميرا) --------
+      if (cameraController.showJustForAdd)
+        _StepCard(
+          stepNumber: 2,
+          title: "بيانات المنتج",
+          subtitle: cameraController.newItemDetails != null
+              ? "تم تعبئة البيانات، اضغط للتعديل"
+              : "الفئة، الحالة، المنصة وتفاصيل تانية (اختياري)",
+          icon: Icons.inventory_2_outlined,
+          onTap: _openItemDetailsDialog,
+          isDone: cameraController.newItemDetails != null,
+        ),
+      if (cameraController.showJustForAdd) const SizedBox(height: 12),
+      if (cameraController.showJustForAdd)
+        /// -------- خط واصل --------
+        _StepConnector(active: cameraController.newItemDetails != null),
+      if (cameraController.showJustForAdd) const SizedBox(height: 5),
+      if (cameraController.showJustForAdd)
+        /// -------- الخطوة 3: تصوير المنتج --------
+        _StepCard(
+          stepNumber: 3,
+          title: "صوّر المنتج",
+          subtitle: _hasCapturedImages
+              ? "${cameraController.images.length} صورة جاهزة — اضغط لإضافة المزيد"
+              : (_hasBarcode
+                    ? "اضغط لفتح الكاميرا وتصوير المنتج"
+                    : (_isSku
+                          ? "اقرأ الـ SKU أولًا لتفعيل هذه الخطوة"
+                          : "امسح الباركود أولًا لتفعيل هذه الخطوة")),
+          icon: Icons.camera_alt_rounded,
+          onTap: _openCamera,
+          enabled: _hasBarcode,
+          isDone: _hasCapturedImages,
+        ),
+      if (cameraController.showJustForAdd)
+        /// -------- معرض الصور الملتقطة --------
+        if (_hasCapturedImages) ...[
+          const SizedBox(height: 16),
+          _CapturedPhotosGallery(
+            images: cameraController.images,
+            onAddMore: _openCamera,
+            onRemove: _removePhoto,
+          ),
+        ],
+      if (cameraController.showJustForAdd)
+        /// -------- زرار حفظ المنتج: بيظهر بس بعد ما يتلقط صورة واحدة على الأقل --------
+        if (_hasCapturedImages) ...[
+          const SizedBox(height: 22),
+          _buildSaveButton(),
+        ],
+    ];
+  }
+
+  /// [جديد] وضع الكاميرا فقط: زرار كاميرا + زرار معرض، وبعدهم الصور وزرار الحفظ
+  List<Widget> _buildCameraOnlyFlow() {
+    return [
+      Row(
+        children: [
+          Expanded(
+            child: _SourceButton(
+              icon: Icons.camera_alt_rounded,
+              label: "من الكاميرا",
+              onTap: _openCameraOnly,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _SourceButton(
+              icon: Icons.photo_library_rounded,
+              label: "من المعرض",
+              isLoading: _isPickingFromGallery,
+              onTap: _pickFromGallery,
+            ),
+          ),
+        ],
+      ),
+      if (_hasCapturedImages) ...[
+        const SizedBox(height: 16),
+        _CapturedPhotosGallery(
+          images: cameraController.images,
+          onAddMore: _openCameraOnly,
+          onRemove: _removePhoto,
+        ),
+        const SizedBox(height: 22),
+        _buildSaveButton(),
+      ],
+    ];
+  }
+
+  /// زرار الحفظ — نفس الزرار القديم بالظبط، اتنقل لدالة عشان يتستخدم في الوضعين
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton(
+        onPressed: _isSaving ? null : _saveProduct,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _Palette.primary,
+          disabledBackgroundColor: _Palette.primary.withOpacity(0.6),
+          elevation: 0,
+          shadowColor: _Palette.primary.withOpacity(0.35),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: _isSaving
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.cloud_upload_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "حفظ المنتج",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15.5,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+} // نهاية _AddnewitemtoinventoryState
 
 /// -------- كارت الخطوة الأولى: مسح الباركود بالكاميرا أو كتابته يدويًا --------
 /// بيتعامل مع حالتين:
@@ -599,10 +803,14 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
 ///    البحث عن المنتج أوتوماتيك.
 /// 2) الكاميرا فشلت (إضاءة ضعيفة، باركود تالف...) -> المستخدم يكتب
 ///    الباركود بنفسه في نفس الحقل، وبيدوس على زرار البحث يدويًا.
+///
+/// [جديد SKU] لو isSku = true: نفس الكارت ونفس مكان الزرار، بس الأيقونات
+/// والعنوان بيتغيروا، والزرار بيفتح شاشة قراءة النص (حسب onScanTap).
 class _BarcodeInputCard extends StatelessWidget {
   final TextEditingController controller;
   final bool isDone;
   final bool isSearching;
+  final bool isSku;
   final VoidCallback onScanTap;
   final VoidCallback onSearchTap;
   final ValueChanged<String> onChanged;
@@ -611,6 +819,7 @@ class _BarcodeInputCard extends StatelessWidget {
     required this.controller,
     required this.isDone,
     required this.isSearching,
+    this.isSku = false,
     required this.onScanTap,
     required this.onSearchTap,
     required this.onChanged,
@@ -652,7 +861,11 @@ class _BarcodeInputCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
-                  isDone ? Icons.check_rounded : Icons.barcode_reader,
+                  isDone
+                      ? Icons.check_rounded
+                      : (isSku
+                            ? Icons.document_scanner_rounded
+                            : Icons.barcode_reader),
                   color: accent,
                   size: 26,
                 ),
@@ -683,10 +896,10 @@ class _BarcodeInputCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            "باركود المنتج",
-                            style: TextStyle(
+                            isSku ? "SKU المنتج" : "باركود المنتج",
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: _Palette.ink,
@@ -698,8 +911,12 @@ class _BarcodeInputCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isDone
-                          ? "تم رصد الباركود بنجاح"
-                          : "امسحه بالكاميرا أو اكتبه يدويًا",
+                          ? (isSku
+                                ? "تمت قراءة الـ SKU بنجاح"
+                                : "تم رصد الباركود بنجاح")
+                          : (isSku
+                                ? "اقرأه بالكاميرا أو اكتبه يدويًا"
+                                : "امسحه بالكاميرا أو اكتبه يدويًا"),
                       style: const TextStyle(
                         fontSize: 12,
                         color: _Palette.inkMuted,
@@ -709,7 +926,7 @@ class _BarcodeInputCard extends StatelessWidget {
                 ),
               ),
 
-              /// زرار فتح الكاميرا لقراءة الباركود
+              /// زرار فتح الكاميرا: باركود في وضع UPC، قراءة نص في وضع SKU
               InkWell(
                 onTap: onScanTap,
                 borderRadius: BorderRadius.circular(12),
@@ -720,8 +937,10 @@ class _BarcodeInputCard extends StatelessWidget {
                     color: _Palette.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
+                  child: Icon(
+                    isSku
+                        ? Icons.text_fields_rounded
+                        : Icons.camera_alt_rounded,
                     color: Colors.white,
                     size: 20,
                   ),
@@ -748,7 +967,9 @@ class _BarcodeInputCard extends StatelessWidget {
                   ),
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: "لم يتم التقاط الباركود؟ اكتبه هنا يدويًا",
+                    hintText: isSku
+                        ? "لم تتم قراءة الـ SKU؟ اكتبه هنا يدويًا"
+                        : "لم يتم التقاط الباركود؟ اكتبه هنا يدويًا",
                     hintStyle: const TextStyle(
                       fontSize: 12.5,
                       color: _Palette.inkMuted,
@@ -1141,6 +1362,127 @@ class _AddMoreTile extends StatelessWidget {
           ),
         ),
         child: const Icon(Icons.add_rounded, color: _Palette.primary, size: 26),
+      ),
+    );
+  }
+}
+
+/// -------- [جديد] كارت اختيار طريقة الإضافة (UPC / Camera) --------
+class _ModeOptionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ModeOptionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
+        decoration: BoxDecoration(
+          color: _Palette.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _Palette.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: _Palette.primarySoft,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: _Palette.primary, size: 28),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: _Palette.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: _Palette.inkMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// -------- [جديد] زرار مصدر الصور (كاميرا / معرض) --------
+class _SourceButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isLoading;
+
+  const _SourceButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 110,
+        decoration: BoxDecoration(
+          color: _Palette.primarySoft,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _Palette.primary.withOpacity(0.35),
+            width: 1.4,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(icon, color: _Palette.primary, size: 30),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: _Palette.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
