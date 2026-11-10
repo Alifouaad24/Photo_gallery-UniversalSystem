@@ -350,7 +350,7 @@ class InventoryRepository {
   }) async {
     try {
       final response = await _dio.post(
-        '/Item/AddItemToInv/${itemId}',
+        '/Item/AddItemToInv/${itemId}/40',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);
