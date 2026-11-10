@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart' hide BarcodeOverlay;
 import 'package:photo_gallery/modules/add-items/controllers/Add_Item-controller.dart';
 import 'package:photo_gallery/modules/add-items/widgets/BarcodeOverlay.dart';
 
@@ -61,7 +61,7 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
             if (controller.scanMode)
-              const IgnorePointer(ignoring: true, child: BarcodeOverlay()),
+              IgnorePointer(ignoring: true, child: BarcodeOverlay()),
           ],
         ),
       ),
