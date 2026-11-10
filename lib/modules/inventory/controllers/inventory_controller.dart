@@ -846,7 +846,6 @@ class InventoryController extends GetxController {
   Future<bool> updateInventoryUpc(int itemId, String upc) async {
     isSaveUpc = true;
     update();
-
     try {
       final result = await inventoryRepo.updateUpc(itemId: itemId, upc: upc);
       return result.fold(
@@ -867,6 +866,76 @@ class InventoryController extends GetxController {
             backgroundColor: Colors.green,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
+          );
+          getInventory(busId!);
+          return true;
+        },
+      );
+    } finally {
+      isSaveUpc = false;
+      update();
+    }
+  }
+
+
+  Future<bool> deleteItem(int itemId) async {
+    isSaveUpc = true;
+    update();
+    try {
+      final result = await inventoryRepo.deleteItem(itemId: itemId);
+      return result.fold(
+        (failure) {
+          Get.snackbar(
+            "فشل",
+            "تعذر حذف المنتج",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return false;
+        },
+        (success) {
+          items = items.where((item) => item.itemId != itemId).toList();
+          Get.snackbar(
+            "تم",
+            "تم حذف المنتج بنجاح",
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+          );
+          getInventory(busId!);
+          return true;
+        },
+      );
+    } finally {
+      isSaveUpc = false;
+      update();
+    }
+  }
+
+  Future<bool> deleteItemImage(int idi) async {
+    isSaveUpc = true;
+    update();
+    try {
+      final result = await inventoryRepo.deleteImage(imageId: idi);
+      return result.fold(
+        (failure) {
+          Get.snackbar(
+            "فشل",
+            "تعذر حذف الصورة",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return false;
+        },
+        (success) {
+          Get.snackbar(
+            "تم",
+            "تم حذف الصورة بنجاح",
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
           );
           getInventory(busId!);
           return true;

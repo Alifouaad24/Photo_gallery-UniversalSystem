@@ -238,7 +238,7 @@ class InventoryRepository {
     double? warehousePrice,
     List<String>? imageUrls,
     int? platformId,
-    int? qty
+    int? qty,
   }) async {
     try {
       final body = {
@@ -247,20 +247,15 @@ class InventoryRepository {
         if (itemConditionId != null) 'itemConditionId': itemConditionId,
         if (description != null) 'description': description,
         if (details != null) 'details': details,
-        if(qty != null) 'qty' : qty,
-        if(qty != null) 'qty' : qty,
+        if (qty != null) 'qty': qty,
+        if (qty != null) 'qty': qty,
         if (itemPrice != null) 'itemPrice': itemPrice,
         if (warehousePrice != null) 'warehousePrice': warehousePrice,
         if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
       };
 
-      
-
       // TODO: عدّل المسار حسب الـ base URL والـ endpoint الفعلي عندك
-      final response = await _dio.put(
-        '/inventory/$inventoryId',
-        data: body,
-      );
+      final response = await _dio.put('/inventory/$inventoryId', data: body);
 
       return Right(InventoryModel.fromJson(response.data));
     } catch (e) {
@@ -356,7 +351,6 @@ class InventoryRepository {
     try {
       final response = await _dio.post(
         '/Item/AddItemToInv/${itemId}',
-
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);
@@ -367,12 +361,12 @@ class InventoryRepository {
 
   Future<Either<String, Map<String, dynamic>>> updateUpc({
     int? itemId,
-    String? upc // <-- جديد
+    String? upc, // <-- جديد
   }) async {
     try {
       final response = await _dio.post(
         '/Item/UpdateUpc',
-        data: { 'itemId': itemId,'upc': upc},
+        data: {'itemId': itemId, 'upc': upc},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Right(response.data);
@@ -381,5 +375,41 @@ class InventoryRepository {
     }
   }
 
-  
+  Future<Either<String, Map<String, dynamic>>> deleteItem({
+    int? itemId,
+    String? upc, // <-- جديد
+  }) async {
+    try {
+      final response = await _dio.delete(
+        '/Item/$itemId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return Right(response.data);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<Map<String, dynamic>>>> deleteImage({
+    int? imageId,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/Item/DeleteImages',
+        data: {
+          'imagesIds': [imageId],
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final List<Map<String, dynamic>> images = (response.data as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+
+      return Right(images);
+    } catch (e) {
+      print('❌ Delete Image Error: $e');
+      return Left(e.toString());
+    }
+  }
 }

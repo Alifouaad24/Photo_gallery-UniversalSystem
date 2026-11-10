@@ -419,9 +419,7 @@ class _ItemsViewState extends State<ItemsView> {
               children: [
                 _buildHeader(controller.items.length),
                 _buildFilterBar(controller),
-                Expanded(
-                  child: _buildContent(controller),
-                ),
+                Expanded(child: _buildContent(controller)),
               ],
             );
           },
@@ -488,10 +486,7 @@ class _ItemsViewState extends State<ItemsView> {
                 const SizedBox(height: 2),
                 Text(
                   '$count item${count == 1 ? '' : 's'} in stock',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -547,10 +542,7 @@ class _ItemsViewState extends State<ItemsView> {
           ),
           dropdownMenuEntries: const [
             DropdownMenuEntry(value: 'All', label: 'All Items'),
-            DropdownMenuEntry(
-              value: 'Under proccess',
-              label: 'Under Process',
-            ),
+            DropdownMenuEntry(value: 'Under proccess', label: 'Under Process'),
             DropdownMenuEntry(value: 'Complated', label: 'Completed'),
           ],
           onSelected: (value) {
@@ -570,9 +562,7 @@ class _ItemsViewState extends State<ItemsView> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(color: _primary),
-    );
+    return const Center(child: CircularProgressIndicator(color: _primary));
   }
 
   Widget _buildErrorState(String message) {
@@ -656,72 +646,232 @@ class _ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
+    return GetBuilder<InventoryController>(
+      builder: (controller) => InkWell(
+        onLongPress: () {
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) {
+              return SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildImage(),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: _buildUpcBadge(),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
+                    ListTile(
+                      leading: const Icon(
+                        Icons.add_shopping_cart,
                         color: Colors.green,
-                        shape: BoxShape.circle,
                       ),
+                      title: const Text('إضافة إلى المخزن'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.AddToinv(item.itemId);
+                      },
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        item.upc?.isNotEmpty == true ? item.upc! : 'No UPC',
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                        ),
+                    ListTile(
+                      leading: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
                       ),
+                      title: const Text(
+                        'حذف المنتج',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        controller.deleteItem(item.itemId);
+                      },
                     ),
+                    const SizedBox(height: 8),
                   ],
                 ),
+              );
+            },
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                _openImageGallery(context, controller);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _buildImage(),
+                        Positioned(top: 8, right: 8, child: _buildUpcBadge()),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            item.upc?.isNotEmpty == true ? item.upc! : 'No UPC',
+                            textAlign: TextAlign.start,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  void _openImageGallery(BuildContext context, InventoryController controller) {
+    final images = (item.images as List)
+        .where((e) => e is Map && e['imageUrl'] != null)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+
+    if (images.isEmpty) return;
+
+    int currentIndex = 0;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                      Text(
+                        '${currentIndex + 1} / ${images.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          final imageId = images[currentIndex]['itemImageId'];
+
+                          if (imageId == null) return;
+
+                          // استدعاء دالة حذف الصورة من الـ API
+                          await controller.deleteItemImage(imageId);
+
+                          setDialogState(() {
+                            images.removeAt(currentIndex);
+                            if (images.isEmpty) {
+                              Navigator.pop(dialogContext);
+                            } else if (currentIndex >= images.length) {
+                              currentIndex = images.length - 1;
+                            }
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: PageView.builder(
+                      itemCount: images.length,
+                      onPageChanged: (index) {
+                        setDialogState(() {
+                          currentIndex = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return InteractiveViewer(
+                          minScale: 0.8,
+                          maxScale: 4,
+                          child: Center(
+                            child: Image.network(
+                              images[index]['imageUrl'].toString(),
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.broken_image,
+                                color: Colors.white,
+                                size: 60,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  const Text(
+                    'Swipe to browse images',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+
+                  const SizedBox(height: 15),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -765,7 +915,7 @@ class _ItemCard extends StatelessWidget {
                 color: _primary.withOpacity(0.6),
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
+                          loadingProgress.expectedTotalBytes!
                     : null,
               ),
             ),
