@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.12.2
+  camera: ^0.11.2+1
   path_provider: ^2.1.2
   permission_handler: ^13.0.2
   image_cropper: ^8.0.0
