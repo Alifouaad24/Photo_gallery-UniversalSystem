@@ -474,7 +474,7 @@ class _SimpleInventoryCard extends StatelessWidget {
                   label: "BIO",
                   done: isBio,
                   // لو ناقص، الضغط بيفتح ديالوج إكمال البيانات وحفظها
-                  onTap: isBio ? null : () => _openBioDialog(context),
+                  onTap:() =>  _openBioDialog(context),
                 ),
                 const SizedBox(width: 8),
                 _StatusIcon(

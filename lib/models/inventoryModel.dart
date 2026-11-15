@@ -44,13 +44,10 @@ class InventoryModel {
 
   bool get isBiometricComplete {
     final categoryOk = (item?.category?.name ?? '').trim().isNotEmpty;
-
-    final descriptionOk = (item?.description ?? '').trim().isNotEmpty;
-
+    final descriptionOk = (item?.itemDescription ?? '').trim().isNotEmpty;
     final detailsOk = (item?.itemDetails ?? '').trim().isNotEmpty;
-
     final priceOk = item?.basePrice != null;
-
+  print('$categoryOk | $descriptionOk | $detailsOk   | $priceOk');
     return categoryOk && descriptionOk && detailsOk && priceOk;
   }
 
@@ -239,6 +236,7 @@ class ItemModel {
   final double? height;
   final double? width;
   final double? length;
+  final dynamic? carBrand;
 
   // Unit
 
@@ -294,7 +292,7 @@ class ItemModel {
     this.height,
     this.width,
     this.length,
-
+    this.carBrand,
     this.description,
     this.weight,
     this.internet,
@@ -335,7 +333,7 @@ class ItemModel {
       height: (json['height'] as num?)?.toDouble(),
       width: (json['width'] as num?)?.toDouble(),
       length: (json['length'] as num?)?.toDouble(),
-
+      carBrand: json['carBrand'],
 
 
       // General

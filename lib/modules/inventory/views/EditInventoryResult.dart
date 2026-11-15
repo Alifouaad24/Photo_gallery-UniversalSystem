@@ -95,15 +95,15 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
 
     final item = widget.item;
 
-    _brandingController = TextEditingController(text: "");
+    _brandingController = TextEditingController(text: item.item?.carBrand?['carBrandName'] ?? "");
     _descriptionController = TextEditingController(
-      text: item.item?.description ?? "",
+      text: item.item?.itemDescription ?? "",
     );
     _detailsController = TextEditingController(
       text: item.item?.itemDetails ?? "",
     );
     _itemPriceController = TextEditingController(
-      text: item.item?.basePrice?.toString() ?? "",
+      text: '${item.item?.basePrice?.toString() }\$' ?? "",
     );
     _warehousePriceController = TextEditingController(
       text: item.sitePrice?.toString(),

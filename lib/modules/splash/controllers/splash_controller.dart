@@ -27,7 +27,11 @@ class SplashController extends GetxController {
       storageService.writeString('product_key', 'upc');
     } else if (business.businessName == 'FHD') {
       storageService.writeString('product_key', 'sku');
-    } else {
+    }
+     else if (business.businessName == 'SHEIN IRAQ') {
+      storageService.writeString('product_key', 'sku');
+    }
+     else {
       storageService.writeString('product_key', '');
     }
     update();
