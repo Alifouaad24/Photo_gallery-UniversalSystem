@@ -61,4 +61,34 @@ class AuthRepository {
       return Left('Network or server error');
     }
   }
+
+  Future<Either<String, List<Map<String, dynamic>>>> getMyGroups(
+    String userId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/Business/GetUserGroups/$userId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      final data = response.data;
+      if (data is! List) {
+        return Left('Unexpected response format');
+      }
+      final groups = data
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      return Right(groups);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        return Left(data['message']?.toString() ?? 'Request failed');
+      }
+      if (data is String) {
+        return Left(data);
+      }
+      return Left('Network or server error');
+    } catch (e) {
+      return Left('Parsing error: $e');
+    }
+  }
 }

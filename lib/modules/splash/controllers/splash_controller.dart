@@ -12,7 +12,7 @@ class SplashController extends GetxController {
   StorageLocalService storageService = Get.find<StorageLocalService>();
   UserResponse? userResponse;
   int? selectedBusinessId;
-
+  List<Map<String, dynamic>> Response = List.empty();
   @override
   void onInit() async {
     super.onInit();
@@ -27,9 +27,9 @@ class SplashController extends GetxController {
       storageService.writeString('product_key', 'upc');
     } else if (business.businessName == 'FHD') {
       storageService.writeString('product_key', 'sku');
-    }else {
+    } else {
       storageService.writeString('product_key', '');
-    } 
+    }
     update();
   }
 
@@ -44,6 +44,30 @@ class SplashController extends GetxController {
           userResponse!.businesses.first.businessId,
         );
         return userResponse!.businesses.first;
+      },
+    );
+  }
+
+  Future<void> getMyGroups() async {
+    var userId = storageService.readString('userId');
+    final result = await authRepository.getMyGroups(userId ?? '');
+
+    result.fold(
+      (error) {
+        Get.toNamed(Routes.login);
+      },
+      (data) {
+        Response = data;
+        selectedBusinessId = storageService.readInt('business_id');
+
+        final savedGroup = storageService.readInt('group_id');
+        final exists = Response.any((g) => g['businessGroupId'] == savedGroup);
+        selectedGroupId = (savedGroup != null && savedGroup != 0 && exists)
+            ? savedGroup
+            : null;
+
+        update();
+        Get.toNamed(Routes.home);
       },
     );
   }
@@ -72,11 +96,52 @@ class SplashController extends GetxController {
             userResponse!.businesses.first.businessName,
           );
         }
+
         update();
         Get.toNamed(Routes.home);
       },
     );
+    await getMyGroups();
   }
+
+  int? selectedGroupId;
+
+Map<String, dynamic>? get selectedGroup {
+  if (selectedGroupId == null) return null;
+  for (final g in Response) {
+    if (g['businessGroupId'] == selectedGroupId) return g;
+  }
+  return null;
+}
+
+List<Business> get groupBusinesses {
+  final all = userResponse?.businesses ?? [];
+  final group = selectedGroup;
+
+  // بدون group: كل البزنس
+  if (group == null) return all;
+
+  final ids = (group['businessGroupBusinesses'] as List? ?? [])
+      .map((e) => (e as Map)['business_id'])
+      .toSet();
+
+  return all.where((b) => ids.contains(b.businessId)).toList();
+}
+
+void selectGroup(int? id) {
+  selectedGroupId = id;
+  storageService.writeInt('group_id', id ?? 0); // 0 = بدون group
+
+  final businesses = groupBusinesses;
+  final currentStillInList =
+      businesses.any((b) => b.businessId == selectedBusinessId);
+
+  if (businesses.isNotEmpty && !currentStillInList) {
+    selectBusiness(businesses.first);
+  } else {
+    update();
+  }
+}
 
   @override
   void onClose() {
