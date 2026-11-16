@@ -11,5 +11,6 @@ class Routes {
   static const String addInventory = '/addInventory';
   static const String invCamera = '/invCamera';
   static const String showItems = '/showItems';
+  static const String settings = '/settings';
 
 }

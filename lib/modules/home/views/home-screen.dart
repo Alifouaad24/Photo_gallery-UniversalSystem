@@ -121,7 +121,9 @@ class HomeScreen extends StatelessWidget {
                           icon: Icons.settings_rounded,
                           color: Colors.deepPurple,
                           title: "Settings",
-                          onTap: () {},
+                          onTap: () {
+                            Get.toNamed(Routes.settings);
+                          },
                         ),
                       ],
                     ),

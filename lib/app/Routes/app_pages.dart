@@ -23,6 +23,7 @@ import 'package:photo_gallery/modules/inventory/views/addImagesToItem.dart';
 import 'package:photo_gallery/modules/inventory/views/addNewItemToInventory.dart';
 import 'package:photo_gallery/modules/inventory/views/items_view.dart';
 import 'package:photo_gallery/modules/inventory/views/showInventory_view.dart';
+import 'package:photo_gallery/modules/settings/views/SettingsView.dart';
 import 'package:photo_gallery/modules/splash/views/splash_screen.dart';
 import 'package:photo_gallery/widgets/session_folder_item.dart';
 
@@ -88,6 +89,11 @@ class AppPages {
       name: Routes.showItems,
       page: () => ItemsView(),
       binding: InventoryBinding(),
+    ),
+        GetPage(
+      name: Routes.settings,
+      page: () => SettingsView(),
+      binding: HomeBinding(),
     ),
   ];
 }

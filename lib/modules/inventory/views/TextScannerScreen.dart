@@ -235,12 +235,28 @@ class _TextScannerScreenState extends State<TextScannerScreen>
   }
 
   String _cleanRecognizedText(RecognizedText recognized) {
-    final lines = <String>[
+    // 1) نجمع كل النص المقروء
+    final rawText = [
       for (final block in recognized.blocks)
-        for (final line in block.lines) line.text.trim(),
-    ].where((l) => l.isNotEmpty).toList();
+        for (final line in block.lines) line.text,
+    ].join(' ');
 
-    return lines.join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+    // 2) نشيل المسافات والرموز بين الحروف والأرقام (أحياناً OCR يفصلهم)
+    //    مثلاً "sa 2356 2472" => "sa23562472"
+    final compact = rawText.replaceAll(RegExp(r'[\s\-_.]'), '');
+
+    // 3) النمط: حرفان أو أكثر في البداية، ثم أرقام فقط، والطول الكلّي 12 فأكثر
+    final pattern = RegExp(r'[A-Za-z]{2,}\d+');
+
+    // 4) نجمع كل التطابقات ونفلتر حسب الطول
+    final matches = pattern
+        .allMatches(compact)
+        .map((m) => m.group(0)!)
+        .where((s) => s.length >= 12)
+        .toList();
+
+    // 5) نرجّع أول تطابق صالح (أو فراغ لو ما لقينا)
+    return matches.isNotEmpty ? matches.first.toLowerCase() : '';
   }
 
   Future<void> _focusOnFrame() async {
