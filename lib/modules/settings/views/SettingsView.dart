@@ -11,10 +11,7 @@ class SettingsView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5F7),
-      appBar: AppBar(
-        title: const Text('الإعدادات'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('الإعدادات'), elevation: 0),
       body: GetBuilder<SettingsController>(
         builder: (c) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -34,6 +31,29 @@ class SettingsView extends StatelessWidget {
                     selected: c.productKey,
                     onSelected: c.setProductKey,
                   ),
+                ),
+              ],
+            ),
+
+            // ========== قسم حقول بيانات المنتج ==========
+            _SettingsSection(
+              icon: Icons.tune_rounded,
+              iconColor: Colors.teal,
+              title: 'حقول بيانات المنتج',
+              subtitle: 'تحكم بالحقول الظاهرة في الإضافة والتعديل',
+              children: [
+                _SwitchRow(
+                  title: 'Size',
+                  description: 'إظهار حقل المقاس عند إضافة أو تعديل منتج',
+                  value: c.showSize,
+                  onChanged: c.setShowSize,
+                ),
+                const Divider(height: 1),
+                _SwitchRow(
+                  title: 'Condition',
+                  description: 'إظهار حقل الحالة عند إضافة أو تعديل منتج',
+                  value: c.showCondition,
+                  onChanged: c.setShowCondition,
                 ),
               ],
             ),
@@ -174,6 +194,60 @@ class _SettingRow extends StatelessWidget {
 }
 
 // =============================================================
+// صف إعداد بمفتاح تشغيل/إيقاف (عنوان + وصف + Switch)
+// =============================================================
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String description;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Switch(
+            value: value,
+            activeThumbColor: Colors.white,
+            activeTrackColor: Colors.deepPurple,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================
 // اختيار مجزّأ (UPC / SKU)
 // =============================================================
 class _SegmentedChoice extends StatelessWidget {
@@ -212,8 +286,11 @@ class _SegmentedChoice extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (isSelected) ...[
-                      const Icon(Icons.check_rounded,
-                          size: 18, color: Colors.white),
+                      const Icon(
+                        Icons.check_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 6),
                     ],
                     Text(

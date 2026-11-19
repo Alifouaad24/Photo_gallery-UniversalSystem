@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
 import 'package:photo_gallery/modules/inventory/controllers/inventory_controller.dart';
+import 'package:photo_gallery/modules/settings/controllers/setting_controller.dart';
 
 /// البيانات اللي ترجع بعد الحفظ - يستخدمها Controller.updateInventoryItem
 class EditInventoryResult {
@@ -18,6 +19,7 @@ class EditInventoryResult {
   final double? warehousePrice; // سعر المخزن
   final List<File> newImages;
   final int? qty;
+  final String? size; // يظهر فقط لو مفعّل من الإعدادات
 
   EditInventoryResult({
     required this.category,
@@ -30,6 +32,7 @@ class EditInventoryResult {
     required this.warehousePrice,
     required this.newImages,
     this.qty,
+    this.size,
   });
 }
 
@@ -82,6 +85,11 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
   late TextEditingController _qtyController;
+  late TextEditingController _sizeController;
+
+  // إظهار الحقول حسب الإعدادات
+  final bool _showSize = SettingsController.isSizeEnabled;
+  final bool _showCondition = SettingsController.isConditionEnabled;
   PlatformModel? _selectedPlatform;
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
@@ -95,7 +103,9 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
 
     final item = widget.item;
 
-    _brandingController = TextEditingController(text: item.item?.carBrand?['carBrandName'] ?? "");
+    _brandingController = TextEditingController(
+      text: item.item?.carBrand?['carBrandName'] ?? "",
+    );
     _descriptionController = TextEditingController(
       text: item.item?.itemDescription ?? "",
     );
@@ -103,12 +113,14 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       text: item.item?.itemDetails ?? "",
     );
     _itemPriceController = TextEditingController(
-      text: '${item.item?.basePrice?.toString() }\$' ?? "",
+      text: '${item.item?.basePrice?.toString()}\$' ?? "",
     );
     _warehousePriceController = TextEditingController(
       text: item.sitePrice?.toString(),
     );
     _qtyController = TextEditingController(text: item.qty?.toString());
+    // TODO: اعمل prefill لما يتضاف حقل size في ItemModel
+    _sizeController = TextEditingController();
     final currentCategoryId = item.item?.categoryId;
 
     if (currentCategoryId != null && widget.categories.isNotEmpty) {
@@ -117,7 +129,8 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
       );
     }
 
-    final currentPlatformId = item.item?.platform?.platformId;
+    final currentPlatformId = item.item?.platformId;
+    print(currentPlatformId);
     if (currentPlatformId != null && widget.platforms.isNotEmpty) {
       _selectedPlatform = widget.platforms.firstWhereOrNull(
         (p) => p.platformId == currentPlatformId,
@@ -154,6 +167,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
     _detailsController.dispose();
     _itemPriceController.dispose();
     _qtyController.dispose();
+    _sizeController.dispose();
     _warehousePriceController.dispose();
     super.dispose();
   }
@@ -190,7 +204,7 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
     final result = EditInventoryResult(
       category: _selectedCategory,
       brand: _brandingController.text.trim(),
-      condition: _selectedCondition,
+      condition: _showCondition ? _selectedCondition : null,
       platform: _selectedPlatform,
       description: _descriptionController.text.trim(),
       details: _detailsController.text.trim(),
@@ -199,6 +213,9 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
           double.tryParse(_warehousePriceController.text.trim()) ?? 0,
       newImages: _newImages,
       qty: int.tryParse(_qtyController.text.trim()) ?? 0,
+      size: _showSize && _sizeController.text.trim().isNotEmpty
+          ? _sizeController.text.trim()
+          : null,
     );
 
     await widget.onSave(result);
@@ -318,37 +335,52 @@ class _EditInventoryDialogState extends State<_EditInventoryDialog> {
 
                         const SizedBox(height: 16),
 
-                        _fieldLabel("الحالة (Condition)"),
-                        DropdownButtonFormField<ItemConditionModel>(
-                          initialValue: _selectedCondition,
-                          isExpanded: true,
-                          decoration: _inputDecoration(
-                            hint: "اختر الحالة",
-                            icon: Icons.flag_outlined,
-                            isEmpty: _selectedCondition == null,
-                          ),
-                          items: widget.conditions
-                              .map(
-                                (c) => DropdownMenuItem(
-                                  value: c,
-                                  child: Text(c.description ?? "-"),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: widget.conditions.isEmpty || _isSaving
-                              ? null
-                              : (value) {
-                                  setState(() => _selectedCondition = value);
-                                },
-                          hint: widget.conditions.isEmpty
-                              ? const Text(
-                                  "سيتم تحميل الحالات من الـ API",
-                                  style: TextStyle(fontSize: 12),
+                        if (_showCondition) ...[
+                          _fieldLabel("الحالة (Condition)"),
+                          DropdownButtonFormField<ItemConditionModel>(
+                            initialValue: _selectedCondition,
+                            isExpanded: true,
+                            decoration: _inputDecoration(
+                              hint: "اختر الحالة",
+                              icon: Icons.flag_outlined,
+                              isEmpty: _selectedCondition == null,
+                            ),
+                            items: widget.conditions
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c.description ?? "-"),
+                                  ),
                                 )
-                              : null,
-                        ),
+                                .toList(),
+                            onChanged: widget.conditions.isEmpty || _isSaving
+                                ? null
+                                : (value) {
+                                    setState(() => _selectedCondition = value);
+                                  },
+                            hint: widget.conditions.isEmpty
+                                ? const Text(
+                                    "سيتم تحميل الحالات من الـ API",
+                                    style: TextStyle(fontSize: 12),
+                                  )
+                                : null,
+                          ),
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
+                        ],
+
+                        if (_showSize) ...[
+                          _fieldLabel("المقاس (Size)"),
+                          TextFormField(
+                            controller: _sizeController,
+                            enabled: !_isSaving,
+                            decoration: _inputDecoration(
+                              hint: "اكتب المقاس",
+                              icon: Icons.straighten_rounded,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         _fieldLabel("الوصف"),
                         TextFormField(

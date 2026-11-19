@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
+import 'package:photo_gallery/modules/settings/controllers/setting_controller.dart';
 
 /// البيانات اللي ترجع بعد تعبئة بيانات المنتج الجديد
 class NewItemDetailsResult {
@@ -12,6 +13,7 @@ class NewItemDetailsResult {
   final double? itemPrice;
   final double? warehousePrice;
   final int? qty; // <-- جديد
+  final String? size; // يظهر فقط لو مفعّل من الإعدادات
 
   NewItemDetailsResult({
     required this.category,
@@ -22,6 +24,7 @@ class NewItemDetailsResult {
     required this.itemPrice,
     required this.warehousePrice,
     required this.qty, // <-- جديد
+    this.size,
   });
 }
 
@@ -74,6 +77,11 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
   late TextEditingController _itemPriceController;
   late TextEditingController _warehousePriceController;
   late TextEditingController _qtyController; // <-- جديد
+  late TextEditingController _sizeController;
+
+  // إظهار الحقول حسب الإعدادات
+  final bool _showSize = SettingsController.isSizeEnabled;
+  final bool _showCondition = SettingsController.isConditionEnabled;
 
   CategoryModel? _selectedCategory;
   ItemConditionModel? _selectedCondition;
@@ -98,6 +106,7 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     _qtyController = TextEditingController(
       text: initial?.qty?.toString() ?? "",
     ); // <-- جديد
+    _sizeController = TextEditingController(text: initial?.size ?? "");
 
     _selectedCategory = initial?.category;
     _selectedCondition = initial?.condition;
@@ -111,6 +120,7 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     _itemPriceController.dispose();
     _warehousePriceController.dispose();
     _qtyController.dispose(); // <-- جديد
+    _sizeController.dispose();
     super.dispose();
   }
 
@@ -118,12 +128,15 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     final result = NewItemDetailsResult(
       category: _selectedCategory,
       platform: _selectedPlatform,
-      condition: _selectedCondition,
+      condition: _showCondition ? _selectedCondition : null,
       description: _descriptionController.text.trim(),
       details: _detailsController.text.trim(),
       itemPrice: double.tryParse(_itemPriceController.text.trim()),
       warehousePrice: double.tryParse(_warehousePriceController.text.trim()),
       qty: int.tryParse(_qtyController.text.trim()),
+      size: _showSize && _sizeController.text.trim().isNotEmpty
+          ? _sizeController.text.trim()
+          : null,
     );
 
     print('========== New Item Details ==========');
@@ -135,6 +148,7 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
     print('Item Price: ${result.itemPrice}');
     print('Warehouse Price: ${result.warehousePrice}');
     print('Qty: ${result.qty}');
+    print('Size: ${result.size}');
     print('=======================================');
 
     widget.onSave(result);
@@ -255,39 +269,54 @@ class _AddItemDetailsDialogState extends State<_AddItemDetailsDialog> {
 
                         const SizedBox(height: 16),
 
-                        /// -------- Condition dropdown --------
-                        _fieldLabel("الحالة (Condition)"),
-                        DropdownButtonFormField<ItemConditionModel>(
-                          initialValue: _selectedCondition,
-                          isExpanded: true,
-                          decoration: _inputDecoration(
-                            hint: "اختر الحالة",
-                            icon: Icons.flag_outlined,
-                          ),
-                          items: widget.conditions
-                              .map(
-                                (c) => DropdownMenuItem(
-                                  value: c,
-                                  child: Text(c.description ?? "-"),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: widget.conditions.isEmpty
-                              ? null
-                              : (value) {
-                                  setState(() => _selectedCondition = value);
-                                },
-                          hint: widget.conditions.isEmpty
-                              ? const Text(
-                                  "سيتم تحميل الحالات من الـ API",
-                                  style: TextStyle(fontSize: 12),
+                        /// -------- Condition dropdown (حسب الإعدادات) --------
+                        if (_showCondition) ...[
+                          _fieldLabel("الحالة (Condition)"),
+                          DropdownButtonFormField<ItemConditionModel>(
+                            initialValue: _selectedCondition,
+                            isExpanded: true,
+                            decoration: _inputDecoration(
+                              hint: "اختر الحالة",
+                              icon: Icons.flag_outlined,
+                            ),
+                            items: widget.conditions
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c.description ?? "-"),
+                                  ),
                                 )
-                              : null,
-                          validator: (value) =>
-                              value == null ? "اختر الحالة" : null,
-                        ),
+                                .toList(),
+                            onChanged: widget.conditions.isEmpty
+                                ? null
+                                : (value) {
+                                    setState(() => _selectedCondition = value);
+                                  },
+                            hint: widget.conditions.isEmpty
+                                ? const Text(
+                                    "سيتم تحميل الحالات من الـ API",
+                                    style: TextStyle(fontSize: 12),
+                                  )
+                                : null,
+                            validator: (value) =>
+                                value == null ? "اختر الحالة" : null,
+                          ),
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
+                        ],
+
+                        /// -------- Size (حسب الإعدادات) --------
+                        if (_showSize) ...[
+                          _fieldLabel("المقاس (Size)"),
+                          TextFormField(
+                            controller: _sizeController,
+                            decoration: _inputDecoration(
+                              hint: "اكتب المقاس",
+                              icon: Icons.straighten_rounded,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         /// -------- Description --------
                         _fieldLabel("الوصف"),

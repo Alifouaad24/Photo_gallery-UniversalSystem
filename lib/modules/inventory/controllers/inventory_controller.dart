@@ -282,6 +282,7 @@ class InventoryController extends GetxController {
       warehousePrice: result.warehousePrice,
       imageUrls: uploadedImageUrls,
       qty: result.qty,
+      size: result.size,
     );
 
     apiResult.fold(
@@ -625,6 +626,7 @@ class InventoryController extends GetxController {
       itemConditionId: details?.condition?.itemConditionId,
       invPrice: details?.warehousePrice?.toString(),
       qty: details?.qty,
+      size: details?.size,
     );
 
     return result.fold(

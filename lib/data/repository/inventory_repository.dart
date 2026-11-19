@@ -239,6 +239,7 @@ class InventoryRepository {
     List<String>? imageUrls,
     int? platformId,
     int? qty,
+    String? size,
   }) async {
     try {
       final body = {
@@ -248,7 +249,7 @@ class InventoryRepository {
         if (description != null) 'description': description,
         if (details != null) 'details': details,
         if (qty != null) 'qty': qty,
-        if (qty != null) 'qty': qty,
+        if (size != null) 'size': size,
         if (itemPrice != null) 'itemPrice': itemPrice,
         if (warehousePrice != null) 'warehousePrice': warehousePrice,
         if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
@@ -301,6 +302,7 @@ class InventoryRepository {
     String? sku,
     String? invPrice,
     int? qty,
+    String? size,
   }) async {
     try {
       final response = await _dio.put(
@@ -317,6 +319,7 @@ class InventoryRepository {
           'ItemConditionId': itemConditionId,
           'invPrice': invPrice,
           'Qty': qty,
+          if (size != null) 'Size': size,
         },
       );
 

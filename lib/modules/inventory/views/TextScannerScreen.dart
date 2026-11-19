@@ -248,14 +248,9 @@ class _TextScannerScreenState extends State<TextScannerScreen>
     final pattern = RegExp(r'[A-Za-z]{2,}\d+');
 
     // 4) نجمع كل التطابقات اللي طولها 12 فأكثر
-    final matches = pattern
-        .allMatches(compact)
-        .map((m) => m.group(0)!)
-        .where((s) => s.length >= 12)
-        .toList();
+    final matches = pattern.allMatches(compact).map((m) => m.group(0)!).where((s) => s.length >= 12).toList();
 
     if (matches.isEmpty) return '';
-
     // 5) نختار أطول سلسلة (الأطول دائماً هي الصحيحة)
     matches.sort((a, b) => b.length.compareTo(a.length));
     return matches.first.toLowerCase();
