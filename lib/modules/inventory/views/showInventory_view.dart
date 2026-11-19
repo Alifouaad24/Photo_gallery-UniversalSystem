@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:photo_gallery/app/Routes/app_routes.dart';
+import 'package:photo_gallery/app/services/StorageService.dart';
 import 'package:photo_gallery/models/inventoryModel.dart';
 import 'package:photo_gallery/modules/camera/controllers/camera_controller.dart';
 import 'package:photo_gallery/modules/inventory/controllers/inventory_controller.dart';
@@ -43,10 +44,15 @@ class ShowinventoryView extends StatelessWidget {
   /// ترتيب بسيط: العناصر "الغير منجزة" (isBiometricComplete != true)
   /// دايمًا فوق، والمنجزة تحت.
   List<InventoryModel> _sorted(List<InventoryModel> list) {
+    final isSku =
+        (Get.find<StorageLocalService>().readString('product_key') ?? '')
+            .trim()
+            .toLowerCase() ==
+        'sku';
     final sortedList = [...list];
     sortedList.sort((a, b) {
-      final aDone = a.isBiometricComplete == true;
-      final bDone = b.isBiometricComplete == true;
+      final aDone = isSku ? a.isSkuBiometricComplete : a.isBiometricComplete;
+      final bDone = isSku ? b.isSkuBiometricComplete : b.isBiometricComplete;
       if (aDone == bDone) return 0;
       return aDone ? 1 : -1; // الغير منجز (false) يطلع الأول
     });
@@ -400,8 +406,18 @@ class _SimpleInventoryCard extends StatelessWidget {
     final hasImage = item.item?.images.isNotEmpty ?? false;
     final imageUrl = hasImage ? item.item!.images.first.imageUrl : null;
 
+    // product_key من الـ SharedPreferences: لو sku نعرض SKU، غير كده UPC
+    final isSku =
+        (Get.find<StorageLocalService>().readString('product_key') ?? '')
+            .trim()
+            .toLowerCase() ==
+        'sku';
+
     final hasUpc = (item.upc ?? item.item?.upc ?? "").isNotEmpty;
-    final isBio = item.isBiometricComplete == true;
+    final hasSku = (item.sku ?? item.item?.sku ?? "").isNotEmpty;
+    final isBio = isSku
+        ? item.isSkuBiometricComplete
+        : item.isBiometricComplete == true;
 
     final isScraped = item.item?.isScraped == true;
 
@@ -462,12 +478,18 @@ class _SimpleInventoryCard extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                _StatusIcon(
-                  icon: Icons.qr_code_rounded,
-                  label: "UPC",
-                  done: hasUpc,
-                  onTap: () => _openUpcDialog(context),
-                ),
+                isSku
+                    ? _StatusIcon(
+                        icon: Icons.text_fields_rounded,
+                        label: "SKU",
+                        done: hasSku,
+                      )
+                    : _StatusIcon(
+                        icon: Icons.qr_code_rounded,
+                        label: "UPC",
+                        done: hasUpc,
+                        onTap: () => _openUpcDialog(context),
+                      ),
                 const SizedBox(width: 8),
                 _StatusIcon(
                   icon: Icons.fingerprint_rounded,

@@ -51,6 +51,17 @@ class InventoryModel {
     return categoryOk && descriptionOk && detailsOk && priceOk;
   }
 
+  /// BIO في وضع SKU: السعر + المنصة + الكاتيجوري لازم يكون ليهم قيمة
+  bool get isSkuBiometricComplete {
+    final priceOk = item?.basePrice != null;
+    final platformOk =
+        item?.platformId != null || item?.platform?.platformId != null;
+    final categoryOk =
+        item?.categoryId != null ||
+        (item?.category?.name ?? '').trim().isNotEmpty;
+    return priceOk && platformOk && categoryOk;
+  }
+
   InventoryModel copyWith({int? qty}) {
     return InventoryModel(
       inventoryId: inventoryId,
