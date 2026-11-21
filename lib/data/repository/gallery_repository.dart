@@ -71,6 +71,7 @@ class GalleryRepository {
   int folderId,
   bool AddToItemAndInventory,
   String ItemUpc,
+  String ItemSku,
   int? itemId, {
   NewItemDetailsResult? itemDetails, // <-- جديد
 }) async {
@@ -96,7 +97,7 @@ class GalleryRepository {
       MapEntry('AddToItemAndInventory', AddToItemAndInventory.toString()),
     );
     formData.fields.add(MapEntry('upc', ItemUpc));
-
+formData.fields.add(MapEntry('sku', ItemSku));
     // -------- بيانات المنتج الإضافية (لو موجودة) --------
     if (itemDetails != null) {
       if (itemDetails.category?.categoryId != null) {

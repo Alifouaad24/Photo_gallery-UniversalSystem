@@ -265,11 +265,14 @@ class InventoryRepository {
   }
 
   Future<Either<String, Map<String, dynamic>>> searchAboutItem(
-    String upc,
-  ) async {
+    String value, {
+    required bool isUpc,
+  }) async {
     try {
       final response = await _dio.get(
-        '/Item/SearchAboutItem/${upc}',
+        // encodeComponent عشان الـ SKU ممكن يكون فيه مسافات أو "/"
+        '/Item/SearchAboutItem/${Uri.encodeComponent(value.trim())}',
+        queryParameters: {'IsUpc': isUpc},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       var result = response.data;

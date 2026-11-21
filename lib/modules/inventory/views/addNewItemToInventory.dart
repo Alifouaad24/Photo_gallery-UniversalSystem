@@ -1544,6 +1544,11 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   String _barcode = '';
   bool _isPreparing = false;
   bool _isSearching = false;
+
+  /// true بس لو القيمة الحالية في الحقل اتعمل لها check ناجح على الـ API.
+  /// أي تغيير في القيمة (مسح أو كتابة) بيرجعها false، وبيتقفل معاها
+  /// إضافة بيانات المنتج والصور لحد ما يتعمل check تاني.
+  bool _isChecked = false;
   String productKey = '';
   final TextEditingController _barcodeController = TextEditingController();
 
@@ -1611,6 +1616,8 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
     if (result == null || result.trim().isEmpty) return;
 
     _applyBarcode(result);
+    // نفس سلوك الباركود: بعد قراءة الـ SKU ندور على المنتج أوتوماتيك.
+    _searchForItem();
   }
 
   /// بتتنادى سواء من نتيجة الكاميرا أو من كتابة المستخدم اليدوية.
@@ -1629,7 +1636,11 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
       cameraController.currentItemId = null;
       cameraController.isNewlyCreatedItem = false;
     }
-    setState(() => _barcode = trimmed);
+    setState(() {
+      // القيمة اتغيرت → الـ check القديم مبقاش صالح
+      if (trimmed != _barcode) _isChecked = false;
+      _barcode = trimmed;
+    });
 
     // بنحدث النص في الحقل بس من غير ما نعمل loop لا نهائي مع onChanged
     if (_barcodeController.text != trimmed) {
@@ -1678,13 +1689,20 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
 
     setState(() => _isSearching = true);
 
-    await cameraController.searchAboutItem(_barcode);
+    final searchedValue = _barcode;
+    await cameraController.searchAboutItem(searchedValue, isUpc: !_isSku);
 
     if (!mounted) return;
-    setState(() => _isSearching = false);
 
     final message = cameraController.errorMessage;
     final result = cameraController.searchResult;
+
+    setState(() {
+      _isSearching = false;
+      // الـ check يتحسب بس لو نجح ولو المستخدم مغيرش القيمة أثناء البحث
+      _isChecked =
+          (message == null || message.isEmpty) && searchedValue == _barcode;
+    });
 
     if (message != null && message.isNotEmpty) {
       ScaffoldMessenger.of(
@@ -1851,6 +1869,7 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   /// أصلًا. البيانات بتتاخد من InventoryController نفسه (نفس الكنترولر
   /// اللي عندنا هنا)، فمش محتاجين نجيب أي كنترولر تاني.
   void _openItemDetailsDialog() {
+    if (!_isChecked) return; // لازم check الأول
     showAddItemDetailsDialog(
       categories: cameraController.categories,
       platforms: cameraController.platforms,
@@ -1866,7 +1885,8 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   }
 
   Future<void> _openCamera() async {
-    if (!_hasBarcode) return; // حماية إضافية، الزرار أصلًا معطل بصريًا
+    // حماية إضافية، الزرار أصلًا مخفي لحد ما يتعمل check
+    if (!_hasBarcode || !_isChecked) return;
     await _ensureFolder();
     // [جديد SKU] في وضع SKU منكتبش القيمة في ItemUpc
     if (_isSku) {
@@ -2163,6 +2183,10 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
   /// مسار UPC: نفس عناصر الصفحة القديمة بالظبط وبنفس شروطها
   /// (showJustForAdd و _hasBarcode و _hasCapturedImages) من غير أي تغيير في المنطق.
   List<Widget> _buildUpcFlow() {
+    // خطوات البيانات والصور بتظهر بس بعد check ناجح، ولو المنتج مش موجود
+    // أصلًا (showJustForAdd). ده بيغطي الـ 4 حالات: UPC/SKU مسح أو يدوي.
+    final bool showSteps = cameraController.showJustForAdd && _isChecked;
+
     return [
       /// -------- الخطوة 1: الباركود (مسح أو إدخال يدوي) --------
       _BarcodeInputCard(
@@ -2175,15 +2199,28 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
         onSearchTap: _searchForItem,
         onChanged: _applyBarcode,
       ),
-      if (cameraController.showJustForAdd) const SizedBox(height: 5),
-      if (cameraController.showJustForAdd)
+
+      /// -------- تنبيه: فيه قيمة بس لسه متعملهاش check --------
+      if (_hasBarcode && !_isChecked && !_isSearching) ...[
+        const SizedBox(height: 10),
+        Text(
+          _isSku
+              ? "اضغط على زر البحث للتحقق من الـ SKU قبل إضافة البيانات والصور"
+              : "اضغط على زر البحث للتحقق من الباركود قبل إضافة البيانات والصور",
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12.5, color: _Palette.inkMuted),
+        ),
+      ],
+
+      if (showSteps) const SizedBox(height: 5),
+      if (showSteps)
         /// -------- خط واصل: بيتلون أخضر لو الخطوة اللي قبله خلصت --------
         _StepConnector(active: _hasBarcode),
 
       const SizedBox(height: 5),
 
       /// -------- الخطوة 2: بيانات المنتج (نُقلت من شاشة الكاميرا) --------
-      if (cameraController.showJustForAdd)
+      if (showSteps)
         _StepCard(
           stepNumber: 2,
           title: "بيانات المنتج",
@@ -2194,12 +2231,12 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
           onTap: _openItemDetailsDialog,
           isDone: cameraController.newItemDetails != null,
         ),
-      if (cameraController.showJustForAdd) const SizedBox(height: 12),
-      if (cameraController.showJustForAdd)
+      if (showSteps) const SizedBox(height: 12),
+      if (showSteps)
         /// -------- خط واصل --------
         _StepConnector(active: cameraController.newItemDetails != null),
-      if (cameraController.showJustForAdd) const SizedBox(height: 5),
-      if (cameraController.showJustForAdd)
+      if (showSteps) const SizedBox(height: 5),
+      if (showSteps)
         /// -------- الخطوة 3: تصوير المنتج --------
         _StepCard(
           stepNumber: 3,
@@ -2213,10 +2250,10 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
                           : "امسح الباركود أولًا لتفعيل هذه الخطوة")),
           icon: Icons.camera_alt_rounded,
           onTap: _openCamera,
-          enabled: _hasBarcode,
+          enabled: _hasBarcode && _isChecked,
           isDone: _hasCapturedImages,
         ),
-      if (cameraController.showJustForAdd)
+      if (showSteps)
         /// -------- معرض الصور الملتقطة --------
         if (_hasCapturedImages) ...[
           const SizedBox(height: 16),
@@ -2226,7 +2263,7 @@ class _AddnewitemtoinventoryState extends State<Addnewitemtoinventory> {
             onRemove: _removePhoto,
           ),
         ],
-      if (cameraController.showJustForAdd)
+      if (showSteps)
         /// -------- زرار حفظ المنتج: بيظهر بس بعد ما يتلقط صورة واحدة على الأقل --------
         if (_hasCapturedImages) ...[
           const SizedBox(height: 22),
@@ -2482,6 +2519,11 @@ class _BarcodeInputCard extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   onChanged: onChanged,
+                  // Enter في الكيبورد = نفس زرار البحث
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) {
+                    if (isDone && !isSearching) onSearchTap();
+                  },
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.text,
                   style: const TextStyle(

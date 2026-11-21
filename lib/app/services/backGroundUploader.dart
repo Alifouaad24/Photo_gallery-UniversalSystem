@@ -66,6 +66,7 @@ class BackgroundUploaderService {
 					folderId,
           false,
           '',
+          '',
           null
 				);
 

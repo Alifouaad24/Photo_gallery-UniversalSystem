@@ -604,6 +604,7 @@ class InventoryController extends GetxController {
     print('itemDescription: ${details?.description}');
     print('itemDetails: ${details?.details}');
     print('upc: ${ItemUpc.isNotEmpty ? ItemUpc : null}');
+    print('sku: ${ItemSKU.isNotEmpty ? ItemUpc : null}');
     print('businessId: $businessId');
     print('categoryId: ${details?.category?.categoryId}');
     print('platformId: ${details?.platform?.platformId}');
@@ -658,6 +659,7 @@ class InventoryController extends GetxController {
       currentFolderId!,
       true,
       ItemUpc,
+      ItemSKU,
       currentItemId!,
       itemDetails: newItemDetails,
     );
@@ -694,12 +696,12 @@ class InventoryController extends GetxController {
   /// تصحيح: كان ناقص إرجاع searchingAboutItem لـ false وعمل update()
   /// في الآخر، فأي مؤشر تحميل مربوط بيها كان هيفضل شغال للأبد. كمان
   /// أضفت معالجة لحالة الفشل بدل ما تتجاهل بصمت.
-  Future<void> searchAboutItem(String upc) async {
+  Future<void> searchAboutItem(String value, {required bool isUpc}) async {
     searchingAboutItem = true;
     errorMessage = null;
     update();
 
-    final result = await inventoryRepo.searchAboutItem(upc);
+    final result = await inventoryRepo.searchAboutItem(value, isUpc: isUpc);
 
     result.fold(
       (error) {
@@ -708,9 +710,9 @@ class InventoryController extends GetxController {
       },
       (data) {
         searchResult = data['msg']?.toString() ?? '';
-        if (searchResult.contains('item already exist in item')) {
-          showJustForAdd = false;
-        }
+        // بيتحدد مع كل بحث: لو المنتج موجود نخفي خطوات الإضافة، لو مش
+        // موجود نظهرها (عشان لو بحث قبلها عن منتج موجود ميفضلش مخفي).
+        showJustForAdd = !searchResult.contains('item already exist in item');
 
         final itemId = data['itemId'];
         final inventoryId = data['inventoryId'];
