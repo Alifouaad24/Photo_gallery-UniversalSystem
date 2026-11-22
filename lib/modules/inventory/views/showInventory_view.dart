@@ -117,7 +117,7 @@ class ShowinventoryView extends StatelessWidget {
                         controller: searchController,
                         onChanged: controller.searchInventory,
                         decoration: InputDecoration(
-                          hintText: "Search UPC, Model, Product...",
+                          hintText: "Search UPC, SKU, Model, Product...",
                           hintStyle: TextStyle(
                             color: _Palette.inkMuted,
                             fontSize: 13,
