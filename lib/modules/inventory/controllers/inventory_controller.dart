@@ -27,6 +27,7 @@ class InventoryController extends GetxController {
   String? errorMessage;
   List<InventoryModel> filteredInventory = [];
   bool changeQty = false;
+  final Set<int> deletingInventoryIds = {};
   //................
   CameraController? camera;
   List<PlatformModel> platforms = [];
@@ -170,6 +171,7 @@ class InventoryController extends GetxController {
   }
 
   void searchInventory(String value) {
+    print(value);
     if (value.trim().isEmpty) {
       filteredInventory = List.from(inventoryList);
     } else {
@@ -179,7 +181,7 @@ class InventoryController extends GetxController {
         return (e.productName ?? "").toLowerCase().contains(text) ||
             (e.item?.model ?? "").toLowerCase().contains(text) ||
             (e.item?.upc ?? "").toLowerCase().contains(text) ||
-            (e.sku ?? "").toLowerCase().contains(text);
+            (e.item?.sku ?? "").toLowerCase().contains(text);
       }).toList();
     }
 
@@ -738,7 +740,10 @@ class InventoryController extends GetxController {
     update();
 
     var businessId = _storageService.readInt('business_id');
-    final result = await inventoryRepo.AddToInventory(itemId: itemId, businessId: businessId!);
+    final result = await inventoryRepo.AddToInventory(
+      itemId: itemId,
+      businessId: businessId!,
+    );
 
     final success = result.fold(
       (error) {
@@ -884,7 +889,6 @@ class InventoryController extends GetxController {
     }
   }
 
-
   Future<bool> deleteItem(int itemId) async {
     isSaveUpc = true;
     update();
@@ -955,8 +959,61 @@ class InventoryController extends GetxController {
   }
 
   Future<void> addCapturedImage(String path) async {
-  // نفس منطق الحفظ اللي بتستخدمه شاشة الكاميرا (DB محلي مثلاً)
-  // images.add({'id': newId, 'name': path, 'isUploaded': 0});
-  update();
-}
+    // نفس منطق الحفظ اللي بتستخدمه شاشة الكاميرا (DB محلي مثلاً)
+    // images.add({'id': newId, 'name': path, 'isUploaded': 0});
+    update();
+  }
+
+  Future<bool> deleteInventoryItem(int inventoryId) async {
+    if (deletingInventoryIds.contains(inventoryId)) {
+      return false;
+    }
+    deletingInventoryIds.add(inventoryId);
+    update();
+
+    try {
+      final result = await inventoryRepo.deleteInventoryItem(
+        inventoryId: inventoryId,
+      );
+
+      return result.fold(
+        (error) {
+          Get.snackbar(
+            "فشل الحذف",
+            error,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+
+          return false;
+        },
+        (success) {
+          // حذف سجل المخزون من القائمتين محلياً
+          inventoryList.removeWhere((item) => item.inventoryId == inventoryId);
+
+          filteredInventory.removeWhere(
+            (item) => item.inventoryId == inventoryId,
+          );
+
+          Get.snackbar(
+            "تم الحذف",
+            "تم حذف العنصر من المخزون بنجاح",
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+
+          return true;
+        },
+      );
+    } finally {
+      deletingInventoryIds.remove(inventoryId);
+      update();
+    }
+  }
+
+  bool isDeletingInventory(int inventoryId) {
+    return deletingInventoryIds.contains(inventoryId);
+  }
 }

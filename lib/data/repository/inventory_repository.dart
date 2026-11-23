@@ -421,4 +421,21 @@ class InventoryRepository {
       return Left(e.toString());
     }
   }
+
+  Future<Either<String, bool>> deleteInventoryItem({
+    required int inventoryId,
+  }) async {
+    try {
+      final response = await _dio.delete(
+        '/inventory/$inventoryId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return Right(response.statusCode == 200 || response.statusCode == 204);
+    } on DioException catch (e) {
+      return Left(e.response?.data?.toString() ?? e.toString());
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
 }

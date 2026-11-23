@@ -357,6 +357,48 @@ class _SimpleInventoryCard extends StatelessWidget {
 
   const _SimpleInventoryCard({required this.item});
 
+  Future<void> _confirmDeleteInventory(BuildContext context) async {
+    final inventoryId = item.inventoryId;
+
+    if (inventoryId == null) return;
+
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_outline_rounded, color: Colors.red),
+            SizedBox(width: 5),
+            Text("Delete Inventory"),
+          ],
+        ),
+        content: const Text(
+          "Are you sure you want to remove this item from inventory? "
+          "The original product will not be deleted.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Get.back(result: true),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text("Delete"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await Get.find<InventoryController>().deleteInventoryItem(inventoryId);
+    }
+  }
+
   void _openBioDialog(BuildContext context) {
     final controller = Get.find<InventoryController>();
     showEditInventoryDialog(
@@ -478,25 +520,27 @@ class _SimpleInventoryCard extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                isSku
-                    ? _StatusIcon(
-                        icon: Icons.text_fields_rounded,
-                        label: "SKU",
-                        done: hasSku,
-                      )
-                    : _StatusIcon(
-                        icon: Icons.qr_code_rounded,
-                        label: "UPC",
-                        done: hasUpc,
-                        onTap: () => _openUpcDialog(context),
-                      ),
+                _StatusIcon(
+                  icon: isSku
+                      ? Icons.text_fields_rounded
+                      : Icons.qr_code_rounded,
+                  label: isSku ? "SKU" : "UPC",
+                  done: isSku ? hasSku : hasUpc,
+                  onTap: () => _showCodeDialog(
+                    context,
+                    isSku ? "Product SKU" : "Product UPC",
+                    isSku
+                        ? (item.sku ?? item.item?.sku ?? "")
+                        : (item.upc ?? item.item?.upc ?? ""),
+                  ),
+                ),
                 const SizedBox(width: 8),
                 _StatusIcon(
                   icon: Icons.fingerprint_rounded,
                   label: "BIO",
                   done: isBio,
                   // لو ناقص، الضغط بيفتح ديالوج إكمال البيانات وحفظها
-                  onTap:() =>  _openBioDialog(context),
+                  onTap: () => _openBioDialog(context),
                 ),
                 const SizedBox(width: 8),
                 _StatusIcon(
@@ -504,12 +548,72 @@ class _SimpleInventoryCard extends StatelessWidget {
                   label: "Scrape",
                   done: isScraped,
                 ),
+
                 const Spacer(),
+
                 _QtyBadge(qty: qty),
+
+                const SizedBox(width: 6),
+
+                Builder(
+                  builder: (context) {
+                    final controller = Get.find<InventoryController>();
+
+                    final isDeleting =
+                        item.inventoryId != null &&
+                        controller.isDeletingInventory(item.inventoryId!);
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: _Palette.dangerSoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        tooltip: "Delete from inventory",
+                        onPressed: isDeleting
+                            ? null
+                            : () => _confirmDeleteInventory(context),
+                        icon: isDeleting
+                            ? const SizedBox(
+                                width: 19,
+                                height: 19,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: _Palette.danger,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.delete_outline_rounded,
+                                color: _Palette.danger,
+                                size: 22,
+                              ),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCodeDialog(BuildContext context, String title, String value) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(title),
+        content: SelectableText(
+          value.isEmpty ? "لا توجد قيمة" : value,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
+        actions: [TextButton(onPressed: Get.back, child: const Text("إغلاق"))],
       ),
     );
   }
@@ -678,7 +782,7 @@ class _ImageGalleryViewerState extends State<_ImageGalleryViewer> {
 
 class _EditUpcDialog extends StatefulWidget {
   final String initialUpc;
-final Future<bool> Function(String upc) onSave;
+  final Future<bool> Function(String upc) onSave;
 
   const _EditUpcDialog({required this.initialUpc, required this.onSave});
 
